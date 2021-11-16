@@ -18,7 +18,7 @@ target_link_libraries(test ${OPENGL_LIBRARIES})
 find_package(GLEW REQUIRED)
 target_include_directories(test PUBLIC ${GLEW_INCLUDE_DIRS})
 target_link_libraries(test ${GLEW_LIBRARIES})
-add_compile_definitions(GLEW_STATIC)
+add_compile_definitions(GLEW_STATIC) # statically link to GLEW 
 
 # GLFW
 find_package(glfw3 3.3 REQUIRED)
