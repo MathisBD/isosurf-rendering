@@ -11,4 +11,5 @@ public:
     Camera m_camera;
     Scene();
     void addTriangle(const Vertex& a, const Vertex& b, const Vertex& c);
+    void translateCamera(const glm::vec2& direction);
 };

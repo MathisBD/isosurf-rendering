@@ -20,4 +20,5 @@ public:
     Application();
     void mainLoop();
     void cleanup();
+    void keyCallback(int key, int action);
 };

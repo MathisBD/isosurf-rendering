@@ -2,6 +2,45 @@
 #include <stdio.h>
 #include "shader.h"
 
+bool isArrowKey(int glfwKey)
+{
+    switch (glfwKey) {
+    case GLFW_KEY_LEFT:
+    case GLFW_KEY_RIGHT:
+    case GLFW_KEY_UP:
+    case GLFW_KEY_DOWN:
+        return true;
+    default:
+        return false;
+    }
+}
+
+glm::vec2 arrowKeyDirection(int glfwKey)
+{
+    switch (glfwKey) {
+    case GLFW_KEY_LEFT: return glm::vec2(-1.0, 0.0);
+    case GLFW_KEY_RIGHT: return glm::vec2(1.0, 0.0);
+    case GLFW_KEY_UP: return glm::vec2(0.0, 1.0);
+    case GLFW_KEY_DOWN: return glm::vec2(0.0, -1.0);
+    default: return glm::vec2(0.0, 0.0);
+    }
+}
+
+void proxyKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    Application* app = (Application*)glfwGetWindowUserPointer(window);
+    app->keyCallback(key, action);
+}
+
+void Application::keyCallback(int key, int action)
+{ 
+    if (action == GLFW_REPEAT) {
+        if (isArrowKey(key)) {
+            glm::vec2 dir = arrowKeyDirection(key);
+            m_scene->translateCamera(dir);
+        }
+    }
+}
 
 void Application::createWindow()
 {
@@ -15,7 +54,10 @@ void Application::createWindow()
         Application::windowPixelWidth, 
         Application::windowPixelHeight, 
         "OpenGL", nullptr, nullptr); // Windowed
+    glfwSetWindowUserPointer(m_window, this);
     glfwMakeContextCurrent(m_window);
+
+    glfwSetKeyCallback(m_window, proxyKeyCallback);
 }
 
 void Application::initGlew()
@@ -60,6 +102,8 @@ void Application::mainLoop()
         glfwPollEvents();
     }   
 }
+
+
 
 void Application::cleanup()
 {
