@@ -7,8 +7,6 @@
 class Application
 {
 private:
-    const static int windowPixelWidth = 800;
-    const static int windowPixelHeight = 600;
     GLFWwindow* m_window;
     Scene* m_scene;
     Renderer* m_renderer;
@@ -17,6 +15,8 @@ private:
     void initGlew();
     void createScene();
 public:
+    const static int windowPixelWidth = 1200;
+    const static int windowPixelHeight = 900;
     Application();
     void mainLoop();
     void cleanup();

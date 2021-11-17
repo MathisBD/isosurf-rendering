@@ -3,14 +3,6 @@
 #include "shader.h"
 
 
-// layout of a vertex : X Y grayscale
-float vertices[] = {
-    0.f, 0.5f, 1.0f,
-    0.5f, -0.5f, 0.8f,
-    -0.5f, -0.5f, 0.0f
-};
-
-
 void Application::createWindow()
 {
     glfwInit();
@@ -39,6 +31,7 @@ void Application::createScene()
     glm::vec3 green = glm::vec3(0.0, 1.0, 0.0);
 
     m_scene = new Scene();
+    m_scene->m_camera.m_viewHeight = 1.0f;
     m_scene->addTriangle(
         Vertex(glm::vec3(0.0, 0.5, 0.0), red),
         Vertex(glm::vec3(0.0, -0.5, 0.0), green),

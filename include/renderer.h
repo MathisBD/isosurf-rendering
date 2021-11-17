@@ -11,6 +11,8 @@ private:
     GLuint m_vbo; 
     Shader* m_vertexShader;
     Shader* m_fragmentShader;
+    GLint m_cameraPosHandle;
+    GLint m_cameraSizeHandle;
     Scene* m_currentScene;
 public:
     Renderer();

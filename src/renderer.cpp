@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "application.h"
 
 
 Renderer::Renderer()
@@ -28,15 +29,18 @@ Renderer::Renderer()
     glUseProgram(shaderProgram);
     
     // get the shader attributes
-    GLint positionHandle = glGetAttribLocation(shaderProgram, "position");
+    GLint positionHandle = glGetAttribLocation(shaderProgram, "vertPosition");
     glEnableVertexAttribArray(positionHandle);
     glVertexAttribPointer(positionHandle, 3, GL_FLOAT, GL_FALSE,
         6 * sizeof(float), 0);
     
-    GLint colorHandle = glGetAttribLocation(shaderProgram, "color");
+    GLint colorHandle = glGetAttribLocation(shaderProgram, "vertColor");
     glEnableVertexAttribArray(colorHandle);
     glVertexAttribPointer(colorHandle, 3, GL_FLOAT, GL_FALSE,
         6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    m_cameraPosHandle = glGetUniformLocation(shaderProgram, "u_cameraCenterPos");
+    m_cameraSizeHandle = glGetUniformLocation(shaderProgram, "u_cameraViewSize");
 }
 
 void layoutVector(const glm::vec3& vect, float* array)
@@ -64,6 +68,15 @@ void Renderer::assignScene(Scene* scene)
 
 void Renderer::renderTo(GLFWwindow* window)
 {
+    auto cam = m_currentScene->m_camera;
+    glUniform2f(
+        m_cameraPosHandle, 
+        cam.m_centerPos.x,
+        cam.m_centerPos.y);
+    glUniform2f(
+        m_cameraSizeHandle, 
+        (cam.m_viewHeight * Application::windowPixelWidth) / Application::windowPixelHeight,
+        cam.m_viewHeight);
     glDrawArrays(GL_TRIANGLES, 0, m_currentScene->m_triangles.size());
     glfwSwapBuffers(window);
 }
