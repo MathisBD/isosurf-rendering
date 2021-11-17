@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Main Project
 project(test VERSION 1.0)
-add_executable(test src/main.cpp)
+add_executable(test src/main.cpp src/scene.cpp src/application.cpp src/shader.cpp src/renderer.cpp)
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # OpenGL
@@ -23,3 +23,8 @@ add_compile_definitions(GLEW_STATIC) # statically link to GLEW
 # GLFW
 find_package(glfw3 3.3 REQUIRED)
 target_link_libraries(test glfw)
+
+# GLM
+find_package(glm REQUIRED)
+target_include_directories(test PUBLIC ${GLM_INCLUDE_DIRS})
+target_link_libraries(test ${GLM_LIBRARIES})
