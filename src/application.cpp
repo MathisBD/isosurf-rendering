@@ -39,7 +39,7 @@ void Application::createScene()
     glm::vec3 green = glm::vec3(0.0, 1.0, 0.0);
     glm::vec3 white = glm::vec3(1.0, 1.0, 1.0);
 
-    m_scene = new Scene();
+    m_scene = new TriangleScene();
     m_scene->m_camera.m_viewHeight = 10.0f;
     m_scene->m_camera.m_translationSpeed = 5.0f;
 

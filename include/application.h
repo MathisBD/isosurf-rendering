@@ -1,7 +1,7 @@
 #pragma once
 #include <GL/glew.h> // include GLEW before anything else 
 #include <GLFW/glfw3.h>
-#include "scene.h"
+#include "scenes/triangle_scene.h"
 #include "renderer.h"
 #include "input_mgr.h"
 
@@ -10,7 +10,7 @@ class Application
 {
 private:
     GLFWwindow* m_window;
-    Scene* m_scene;
+    TriangleScene* m_scene;
     Renderer* m_renderer;
 
     void createWindow();

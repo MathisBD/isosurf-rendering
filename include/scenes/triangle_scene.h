@@ -4,12 +4,12 @@
 #include "camera.h"
 
 
-class Scene
+class TriangleScene
 {
 public:
     std::vector<Vertex> m_triangles;
     Camera m_camera;
-    Scene();
+    TriangleScene();
     // all points should have the same z coordinate
     void addTriangle(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& color);
     // all points should have the same z coordinate

@@ -53,15 +53,15 @@ void layoutVector(const glm::vec3& vect, float* array)
     array[2] = vect.z;
 }
 
-void Renderer::assignScene(Scene* scene)
+void Renderer::assignScene(TriangleScene* scene)
 {
-    m_currentScene = scene;
+    m_triangleScene = scene;
 
     // layout the geometry in a flat array
-    size_t count = m_currentScene->m_triangles.size();
+    size_t count = m_triangleScene->m_triangles.size();
     float* vertices = new float[6*count];
     for (size_t i = 0; i < count; i++) {
-        Vertex vert = m_currentScene->m_triangles[i];
+        Vertex vert = m_triangleScene->m_triangles[i];
         layoutVector(vert.m_position, vertices + 6*i);
         layoutVector(vert.m_color, vertices + 6*i + 3);
     }
@@ -73,7 +73,7 @@ void Renderer::renderTo(GLFWwindow* window)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    auto cam = m_currentScene->m_camera;
+    auto cam = m_triangleScene->m_camera;
     glUniform2f(
         m_cameraPosHandle, 
         cam.m_centerPos.x,
@@ -83,6 +83,6 @@ void Renderer::renderTo(GLFWwindow* window)
         (cam.m_viewHeight * Application::windowPixelWidth) / Application::windowPixelHeight,
         cam.m_viewHeight);
         
-    glDrawArrays(GL_TRIANGLES, 0, m_currentScene->m_triangles.size());
+    glDrawArrays(GL_TRIANGLES, 0, m_triangleScene->m_triangles.size());
     glfwSwapBuffers(window);
 }

@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Main Project
 project(test VERSION 1.0)
-add_executable(test src/main.cpp src/scene.cpp src/application.cpp 
-    src/shader.cpp src/renderer.cpp src/input_mgr.cpp src/timer.cpp)
+FILE(GLOB_RECURSE CPP_SOURCES RELATIVE ${CMAKE_SOURCE_DIR} "./src/*.cpp")
+add_executable(test ${CPP_SOURCES})
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # OpenGL
