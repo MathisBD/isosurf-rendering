@@ -1,46 +1,8 @@
 #include "application.h"
 #include <stdio.h>
 #include "shader.h"
+#include "timer.h"
 
-bool isArrowKey(int glfwKey)
-{
-    switch (glfwKey) {
-    case GLFW_KEY_LEFT:
-    case GLFW_KEY_RIGHT:
-    case GLFW_KEY_UP:
-    case GLFW_KEY_DOWN:
-        return true;
-    default:
-        return false;
-    }
-}
-
-glm::vec2 arrowKeyDirection(int glfwKey)
-{
-    switch (glfwKey) {
-    case GLFW_KEY_LEFT: return glm::vec2(-1.0, 0.0);
-    case GLFW_KEY_RIGHT: return glm::vec2(1.0, 0.0);
-    case GLFW_KEY_UP: return glm::vec2(0.0, 1.0);
-    case GLFW_KEY_DOWN: return glm::vec2(0.0, -1.0);
-    default: return glm::vec2(0.0, 0.0);
-    }
-}
-
-void proxyKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    Application* app = (Application*)glfwGetWindowUserPointer(window);
-    app->keyCallback(key, action);
-}
-
-void Application::keyCallback(int key, int action)
-{ 
-    if (action == GLFW_REPEAT) {
-        if (isArrowKey(key)) {
-            glm::vec2 dir = arrowKeyDirection(key);
-            m_scene->translateCamera(dir);
-        }
-    }
-}
 
 void Application::createWindow()
 {
@@ -56,14 +18,18 @@ void Application::createWindow()
         "OpenGL", nullptr, nullptr); // Windowed
     glfwSetWindowUserPointer(m_window, this);
     glfwMakeContextCurrent(m_window);
-
-    glfwSetKeyCallback(m_window, proxyKeyCallback);
 }
 
 void Application::initGlew()
 {
     glewExperimental = GL_TRUE;
     glewInit();
+}
+
+void Application::setupInput()
+{
+    m_input_mgr = new InputManager();
+    m_input_mgr->setupCallbacks(m_window);
 }
 
 void Application::createScene()
@@ -73,7 +39,8 @@ void Application::createScene()
     glm::vec3 green = glm::vec3(0.0, 1.0, 0.0);
 
     m_scene = new Scene();
-    m_scene->m_camera.m_viewHeight = 1.0f;
+    m_scene->m_camera.m_viewHeight = 10.0f;
+    m_scene->m_camera.m_translationSpeed = 5.0f;
     m_scene->addTriangle(
         Vertex(glm::vec3(0.0, 0.5, 0.0), red),
         Vertex(glm::vec3(0.0, -0.5, 0.0), green),
@@ -88,9 +55,37 @@ Application::Application()
 {
     createWindow();
     initGlew();
+    setupInput();
     createScene();
     m_renderer = new Renderer();
     m_renderer->assignScene(m_scene);
+}
+
+glm::vec2 arrowKeyDirection(int glfwKey)
+{
+    switch (glfwKey) {
+    case GLFW_KEY_LEFT: return glm::vec2(-1.0, 0.0);
+    case GLFW_KEY_RIGHT: return glm::vec2(1.0, 0.0);
+    case GLFW_KEY_UP: return glm::vec2(0.0, 1.0);
+    case GLFW_KEY_DOWN: return glm::vec2(0.0, -1.0);
+    default: return glm::vec2(0.0, 0.0);
+    }
+}
+
+void Application::moveCamera()
+{
+    if (m_input_mgr->m_leftKey == KeyState::PRESSED) {
+        m_scene->translateCamera(glm::vec2(-1.0, 0.0));
+    }
+    if (m_input_mgr->m_rightKey == KeyState::PRESSED) {
+        m_scene->translateCamera(glm::vec2(1.0, 0.0));
+    }
+    if (m_input_mgr->m_downKey == KeyState::PRESSED) {
+        m_scene->translateCamera(glm::vec2(0.0, -1.0));
+    }
+    if (m_input_mgr->m_upKey == KeyState::PRESSED) {
+        m_scene->translateCamera(glm::vec2(0.0, 1.0));
+    }
 }
 
 void Application::mainLoop()
@@ -98,6 +93,8 @@ void Application::mainLoop()
     // GLFW event loop
     while(!glfwWindowShouldClose(m_window))
     {   
+        Timer::updateTime();
+        moveCamera();
         m_renderer->renderTo(m_window);
         glfwPollEvents();
     }   

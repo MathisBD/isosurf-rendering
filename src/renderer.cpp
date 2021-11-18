@@ -41,6 +41,9 @@ Renderer::Renderer()
 
     m_cameraPosHandle = glGetUniformLocation(shaderProgram, "u_cameraCenterPos");
     m_cameraSizeHandle = glGetUniformLocation(shaderProgram, "u_cameraViewSize");
+
+    // set background color
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void layoutVector(const glm::vec3& vect, float* array)
@@ -68,6 +71,8 @@ void Renderer::assignScene(Scene* scene)
 
 void Renderer::renderTo(GLFWwindow* window)
 {
+    glClear(GL_COLOR_BUFFER_BIT);
+
     auto cam = m_currentScene->m_camera;
     glUniform2f(
         m_cameraPosHandle, 
@@ -77,6 +82,7 @@ void Renderer::renderTo(GLFWwindow* window)
         m_cameraSizeHandle, 
         (cam.m_viewHeight * Application::windowPixelWidth) / Application::windowPixelHeight,
         cam.m_viewHeight);
+        
     glDrawArrays(GL_TRIANGLES, 0, m_currentScene->m_triangles.size());
     glfwSwapBuffers(window);
 }

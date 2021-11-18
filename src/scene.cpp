@@ -1,4 +1,6 @@
 #include "scene.h"
+#include "timer.h"
+
 
 Scene::Scene()
 {
@@ -14,5 +16,5 @@ void Scene::addTriangle(const Vertex& a, const Vertex& b, const Vertex& c)
 
 void Scene::translateCamera(const glm::vec2& direction)
 {
-    m_camera.m_centerPos += direction * m_camera.m_translationSpeed;
+    m_camera.m_centerPos += direction * m_camera.m_translationSpeed * Timer::dt;
 }
