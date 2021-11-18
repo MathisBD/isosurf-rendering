@@ -37,18 +37,27 @@ void Application::createScene()
     glm::vec3 red = glm::vec3(1.0, 0.0, 0.0);
     glm::vec3 blue = glm::vec3(0.0, 0.0, 1.0);
     glm::vec3 green = glm::vec3(0.0, 1.0, 0.0);
+    glm::vec3 white = glm::vec3(1.0, 1.0, 1.0);
 
     m_scene = new Scene();
     m_scene->m_camera.m_viewHeight = 10.0f;
     m_scene->m_camera.m_translationSpeed = 5.0f;
+
     m_scene->addTriangle(
-        Vertex(glm::vec3(0.0, 0.5, 0.0), red),
-        Vertex(glm::vec3(0.0, -0.5, 0.0), green),
-        Vertex(glm::vec3(-0.5, 0.0, 0.0), green));
+        glm::vec3(0.0, 0.5, 0.0),
+        glm::vec3(0.0, -0.5, 0.0),
+        glm::vec3(-0.5, 0.0, 0.0), green);
     m_scene->addTriangle(
-        Vertex(glm::vec3(0.0, 0.5, 0.0), red),
-        Vertex(glm::vec3(0.0, -0.5, 0.0), green),
-        Vertex(glm::vec3(0.5, 0.0, 0.0), green));
+        glm::vec3(0.0, 0.5, 0.0),
+        glm::vec3(0.0, -0.5, 0.0),
+        glm::vec3(0.5, 0.0, 0.0), red);
+    m_scene->addLine(
+        glm::vec3(0.0, 1.0, 0.0),
+        glm::vec3(-3.0, 2.0, 0.0),
+        white,
+        0.01);
+
+    // draw the lines
 }
 
 Application::Application()
