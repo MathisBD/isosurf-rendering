@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-class GridScene
+class SquareGrid
 {
 public:
     // number of subdivisions in the grid (including endpoints)
@@ -15,10 +15,7 @@ public:
     float m_bottom;
     float m_top;
 
-    // contents of the vertices in the grid, indexed as m_grid[x][y]
-    std::vector<std::vector<float>> m_grid;
-
-    GridScene(size_t subdivs_x, size_t subdivs_y, 
+    SquareGrid(size_t subdivs_x, size_t subdivs_y, 
         float left, float right, float bottom, float top);
 
     float width();

@@ -8,7 +8,7 @@
 
 class Application
 {
-private:
+protected:
     GLFWwindow* m_window;
     TriangleScene* m_scene;
     Renderer* m_renderer;
@@ -16,14 +16,15 @@ private:
     void createWindow();
     void initGlew();
     void setupInput();
-    void createScene();
     void moveCamera();
+    virtual void createScene() = 0;
 public:
     InputManager* m_input_mgr;
 
     const static int windowPixelWidth = 1200;
     const static int windowPixelHeight = 900;
     Application();
+    void initialize();
     void mainLoop();
     void cleanup();
 };

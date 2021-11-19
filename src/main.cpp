@@ -1,9 +1,10 @@
-#include "application.h"
+#include "applications/sandbox.h"
 
 
 int main()
 {
-    auto app = Application();
+    auto app = Sandbox();
+    app.initialize();
     app.mainLoop();
     app.cleanup();
     return 0;

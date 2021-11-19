@@ -1,8 +1,8 @@
-#include "scenes/grid_scene.h"
+#include "square_grid.h"
 #include <assert.h>
 
 
-GridScene::GridScene(size_t subdivs_x, size_t subdivs_y, 
+SquareGrid::SquareGrid(size_t subdivs_x, size_t subdivs_y, 
     float left, float right, float bottom, float top) :
     m_subdivs_x(subdivs_x), m_subdivs_y(subdivs_y), m_left(left), 
     m_right(right), m_bottom(bottom), m_top(top)
@@ -11,33 +11,29 @@ GridScene::GridScene(size_t subdivs_x, size_t subdivs_y,
     assert(subdivs_y >= 2);
     assert(left <= right);
     assert(bottom <= top);
-
-    for (size_t i = 0; i < m_subdivs_x; i++) {
-        m_grid.push_back(std::vector<float>(m_subdivs_y, 0.0f));
-    }
 }
 
-float GridScene::width()
+float SquareGrid::width()
 {
     return m_right - m_left;
 }
 
-float GridScene::height()
+float SquareGrid::height()
 {
     return m_top - m_bottom;
 }
 
-float GridScene::subdivisionWidth()
+float SquareGrid::subdivisionWidth()
 {
     return width() / (m_subdivs_x - 1);
 }
 
-float GridScene::subdivisionHeight()
+float SquareGrid::subdivisionHeight()
 {
     return height() / (m_subdivs_y - 1);
 }
 
-glm::vec2 GridScene::worldPosition(size_t x, size_t y)
+glm::vec2 SquareGrid::worldPosition(size_t x, size_t y)
 {
     assert(x < m_subdivs_x);
     assert(y < m_subdivs_y);
