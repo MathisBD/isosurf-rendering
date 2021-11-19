@@ -1,5 +1,4 @@
 #include "application.h"
-#include "scenes/grid_scene.h"
 #include <stdio.h>
 #include "shader.h"
 #include "timer.h"

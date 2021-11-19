@@ -1,4 +1,4 @@
-#include "scenes/triangle_scene.h"
+#include "triangle_scene.h"
 #include "timer.h"
 
 

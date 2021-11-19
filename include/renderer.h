@@ -1,5 +1,5 @@
 #pragma once
-#include "scenes/triangle_scene.h"
+#include "triangle_scene.h"
 #include "shader.h"
 #include <GLFW/glfw3.h>
 

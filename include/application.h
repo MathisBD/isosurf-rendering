@@ -1,7 +1,7 @@
 #pragma once
 #include <GL/glew.h> // include GLEW before anything else 
 #include <GLFW/glfw3.h>
-#include "scenes/triangle_scene.h"
+#include "triangle_scene.h"
 #include "renderer.h"
 #include "input_mgr.h"
 
