@@ -105,6 +105,7 @@ glm::vec2 MarchingSquares::surfacePoint(const edge& e)
     bool isStartInside = m_density(start) > 0;
     bool isEndInside = m_density(end) > 0;
 
+    // binary search for the point on the surface (where density == 0).
     for (int i = 0; i < binSearchIterations; i++) {
         glm::vec2 middle = (start + end) / 2.0f;
         bool isMiddleInside = m_density(middle) > 0;
