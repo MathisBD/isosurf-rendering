@@ -2,7 +2,7 @@
 #include <GL/glew.h> // include GLEW before anything else 
 #include <GLFW/glfw3.h>
 #include "triangle_scene.h"
-#include "renderer.h"
+#include "rendering/renderer.h"
 #include "input_mgr.h"
 
 
@@ -12,19 +12,22 @@ protected:
     GLFWwindow* m_window;
     TriangleScene* m_scene;
     Renderer* m_renderer;
+    InputManager* m_inputMgr;
 
-    void createWindow();
-    void initGlew();
-    void setupInput();
-    void moveCamera();
-    virtual void createScene() = 0;
+    void CreateWindow();
+    void InitGlew();
+    void SetupInput();
+    void MoveCamera();
+    virtual void CreateScene() = 0;
 public:
-    InputManager* m_input_mgr;
+    const static int WINDOW_PIXEL_WIDTH = 1200;
+    const static int WINDOW_PIXEL_HEIGHT = 900;
 
-    const static int windowPixelWidth = 1200;
-    const static int windowPixelHeight = 900;
     Application();
-    void initialize();
-    void mainLoop();
-    void cleanup();
+    
+    void Initialize();
+    void MainLoop();
+    void Cleanup();
+
+    InputManager& GetInputManager();
 };

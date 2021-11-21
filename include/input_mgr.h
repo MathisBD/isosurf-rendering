@@ -18,6 +18,6 @@ public:
     KeyState m_downKey = KeyState::RELEASED;
     
     InputManager();
-    void setupCallbacks(GLFWwindow* window);
-    void keyCallback(int key, int action);
+    void SetupCallbacks(GLFWwindow* window);
+    void KeyCallback(int key, int action);
 };

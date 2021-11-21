@@ -1,5 +1,4 @@
 #pragma once
-#include "common.h"
 #include "square_grid.h"
 #include "triangle_scene.h"
 #include <array>
@@ -33,21 +32,21 @@ private:
     // for a given vertex configuration.
     inline static std::array<std::vector<line>, 16> s_table;
 
-    void meshSquare(const vertex& v0);
-    bool isInsideShape(const vertex& v);
-    void buildLine(line line, const vertex& v0);
-    edge edgeFromIndex(int edgeIndex, const vertex& v0);
+    void MeshSquare(const vertex& v0);
+    bool IsInsideShape(const vertex& v);
+    void BuildLine(line line, const vertex& v0);
+    edge EdgeFromIndex(int edgeIndex, const vertex& v0);
     
     const static int binSearchIterations = 10;
-    glm::vec2 surfacePoint(const edge& e);
+    glm::vec2 SurfacePoint(const edge& e);
 public:
     float (*m_density)(glm::vec2 pos);
     SquareGrid* m_grid;
     TriangleScene* m_triangleScene;
 
-    static void initTable();
+    static void InitTable();
 
     MarchingSquares(float (*density)(glm::vec2 pos), SquareGrid* grid);
     // puts the result in m_triangleScene
-    void triangulate();
+    void Triangulate();
 };

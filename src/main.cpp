@@ -4,8 +4,8 @@
 int main()
 {
     auto app = Sandbox();
-    app.initialize();
-    app.mainLoop();
-    app.cleanup();
+    app.Initialize();
+    app.MainLoop();
+    app.Cleanup();
     return 0;
 }

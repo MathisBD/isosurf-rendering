@@ -18,11 +18,11 @@ public:
     SquareGrid(size_t subdivs_x, size_t subdivs_y, 
         float left, float right, float bottom, float top);
 
-    float width();
-    float height();
+    float Width();
+    float Height();
 
-    float subdivisionWidth();
-    float subdivisionHeight();
+    float SubdivisionWidth();
+    float SubdivisionHeight();
 
-    glm::vec2 worldPosition(size_t x, size_t y);
+    glm::vec2 WorldPosition(size_t x, size_t y);
 };

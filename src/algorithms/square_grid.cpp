@@ -1,4 +1,4 @@
-#include "square_grid.h"
+#include "algorithms/square_grid.h"
 #include <assert.h>
 
 
@@ -13,32 +13,32 @@ SquareGrid::SquareGrid(size_t subdivs_x, size_t subdivs_y,
     assert(bottom <= top);
 }
 
-float SquareGrid::width()
+float SquareGrid::Width()
 {
     return m_right - m_left;
 }
 
-float SquareGrid::height()
+float SquareGrid::Height()
 {
     return m_top - m_bottom;
 }
 
-float SquareGrid::subdivisionWidth()
+float SquareGrid::SubdivisionWidth()
 {
-    return width() / (m_subdivs_x - 1);
+    return Width() / (m_subdivs_x - 1);
 }
 
-float SquareGrid::subdivisionHeight()
+float SquareGrid::SubdivisionHeight()
 {
-    return height() / (m_subdivs_y - 1);
+    return Height() / (m_subdivs_y - 1);
 }
 
-glm::vec2 SquareGrid::worldPosition(size_t x, size_t y)
+glm::vec2 SquareGrid::WorldPosition(size_t x, size_t y)
 {
     assert(x < m_subdivs_x);
     assert(y < m_subdivs_y);
     
     return glm::vec2(
-        m_left + x * subdivisionWidth(), 
-        m_bottom + y * subdivisionHeight());
+        m_left + x * SubdivisionWidth(), 
+        m_bottom + y * SubdivisionHeight());
 }

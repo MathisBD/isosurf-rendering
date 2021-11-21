@@ -6,14 +6,14 @@ InputManager::InputManager()
 
 }
 
-void proxyKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void ProxyKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     Application* app = (Application*)glfwGetWindowUserPointer(window);
-    app->m_input_mgr->keyCallback(key, action);
+    app->GetInputManager().KeyCallback(key, action);
 }
 
 
-void InputManager::keyCallback(int key, int action)
+void InputManager::KeyCallback(int key, int action)
 { 
     if (action == GLFW_PRESS) {
         switch (key) {
@@ -35,7 +35,7 @@ void InputManager::keyCallback(int key, int action)
     }
 }
 
-void InputManager::setupCallbacks(GLFWwindow* window)
+void InputManager::SetupCallbacks(GLFWwindow* window)
 {
-    glfwSetKeyCallback(window, proxyKeyCallback);
+    glfwSetKeyCallback(window, ProxyKeyCallback);
 }

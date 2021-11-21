@@ -1,6 +1,6 @@
 #include "algorithms/marching_squares.h"
 
-void MarchingSquares::initTable()
+void MarchingSquares::InitTable()
 {
     s_table[0b0000] = {};
     s_table[0b0001] = {{0, 3}};
@@ -30,61 +30,61 @@ MarchingSquares::MarchingSquares(float (*density)(glm::vec2 pos), SquareGrid* gr
     m_triangleScene = new TriangleScene();
 }
 
-void MarchingSquares::triangulate()
+void MarchingSquares::Triangulate()
 {
     for (int x = 0; x < m_grid->m_subdivs_x-1; x++) {
         for (int y = 0; y < m_grid->m_subdivs_y-1; y++) {
-            meshSquare({x, y});
+            MeshSquare({x, y});
         }
     }
 }
 
 
 // mesh the square with bottom-left corner at (x, y)
-void MarchingSquares::meshSquare(const vertex& v0)
+void MarchingSquares::MeshSquare(const vertex& v0)
 {
     int x = v0.x;
     int y = v0.y;
 
     uint8_t hash = 0;
-    if (isInsideShape({x, y})) {
+    if (IsInsideShape({x, y})) {
         hash |= 1;
     }
-    if (isInsideShape({x, y+1})) {
+    if (IsInsideShape({x, y+1})) {
         hash |= 2;
     }
-    if (isInsideShape({x+1, y+1})) {
+    if (IsInsideShape({x+1, y+1})) {
         hash |= 4;
     }
-    if (isInsideShape({x+1, y})) {
+    if (IsInsideShape({x+1, y})) {
         hash |= 8;
     }
     for (line line : s_table[hash]) {
-        buildLine(line, v0);
+        BuildLine(line, v0);
     }
 }
 
 // is the point at (x, y) inside the shape ?
-bool MarchingSquares::isInsideShape(const vertex& v)
+bool MarchingSquares::IsInsideShape(const vertex& v)
 {
-    glm::vec2 p = m_grid->worldPosition(v.x, v.y);
+    glm::vec2 p = m_grid->WorldPosition(v.x, v.y);
     return m_density(p) > 0.0f; 
 }
 
-void MarchingSquares::buildLine(line line, const vertex& v0)
+void MarchingSquares::BuildLine(line line, const vertex& v0)
 {
-    glm::vec2 startPos = surfacePoint(edgeFromIndex(line.firstEdgeIdx, v0));
-    glm::vec2 endPos = surfacePoint(edgeFromIndex(line.secondEdgeIdx, v0));
+    glm::vec2 startPos = SurfacePoint(EdgeFromIndex(line.firstEdgeIdx, v0));
+    glm::vec2 endPos = SurfacePoint(EdgeFromIndex(line.secondEdgeIdx, v0));
     
     glm::vec3 color(0, 0, 1);
-    m_triangleScene->addLine(
+    m_triangleScene->AddLine(
         glm::vec3(startPos, 0), 
         glm::vec3(endPos, 0), 
         color, 
         0.02f);
 }
  
-MarchingSquares::edge MarchingSquares::edgeFromIndex(int edgeIndex, const vertex& v0)
+MarchingSquares::edge MarchingSquares::EdgeFromIndex(int edgeIndex, const vertex& v0)
 {
     int x = v0.x;
     int y = v0.y;
@@ -97,10 +97,10 @@ MarchingSquares::edge MarchingSquares::edgeFromIndex(int edgeIndex, const vertex
     }
 }
 
-glm::vec2 MarchingSquares::surfacePoint(const edge& e)
+glm::vec2 MarchingSquares::SurfacePoint(const edge& e)
 {
-    glm::vec2 start = m_grid->worldPosition(e.first.x, e.first.y);
-    glm::vec2 end = m_grid->worldPosition(e.second.x, e.second.y);
+    glm::vec2 start = m_grid->WorldPosition(e.first.x, e.first.y);
+    glm::vec2 end = m_grid->WorldPosition(e.second.x, e.second.y);
             
     bool isStartInside = m_density(start) > 0;
     bool isEndInside = m_density(end) > 0;
