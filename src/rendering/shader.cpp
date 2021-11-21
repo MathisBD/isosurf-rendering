@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <assert.h>
+#include "rendering/gl_errors.h"
 
 
 Shader::Shader(const std::string& filePath) : m_filePath(filePath)
@@ -13,17 +14,17 @@ Shader::Shader(const std::string& filePath) : m_filePath(filePath)
 
 Shader::~Shader() 
 {
-    glDeleteProgram(m_rendererID);    
+    GLCall(glDeleteProgram(m_rendererID));    
 }
 
 void Shader::Bind() const 
 {
-    glUseProgram(m_rendererID);    
+    GLCall(glUseProgram(m_rendererID));    
 }
 
 void Shader::Unbind() const 
 {
-    glUseProgram(0);
+    GLCall(glUseProgram(0));
 }
 
 Shader::ShaderSource Shader::LoadSource() 
@@ -62,17 +63,17 @@ Shader::ShaderSource Shader::LoadSource()
 
 unsigned int Shader::CreateProgram(const ShaderSource& source) 
 {
-    unsigned int programID = glCreateProgram();
+    GLCall(unsigned int programID = glCreateProgram());
     unsigned int vs = CompileShader(GL_VERTEX_SHADER, source.vertexSource);
     unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, source.fragmentSource);
 
-    glAttachShader(programID, vs);
-    glAttachShader(programID, fs);
-    glLinkProgram(programID);
-    glValidateProgram(programID);
+    GLCall(glAttachShader(programID, vs));
+    GLCall(glAttachShader(programID, fs));
+    GLCall(glLinkProgram(programID));
+    GLCall(glValidateProgram(programID));
 
-    glDeleteShader(vs);
-    glDeleteShader(fs);
+    GLCall(glDeleteShader(vs));
+    GLCall(glDeleteShader(fs));
 
     return programID;
 }
@@ -81,12 +82,12 @@ unsigned int Shader::CreateProgram(const ShaderSource& source)
 unsigned int Shader::CompileShader(unsigned int type, const std::string& source) 
 {
     // create the shader
-    unsigned int shaderID = glCreateShader(type);
+    GLCall(unsigned int shaderID = glCreateShader(type));
     const char* src = source.c_str();
-    glShaderSource(shaderID, 1, &src, NULL);
+    GLCall(glShaderSource(shaderID, 1, &src, NULL));
     
     // compile the shader
-    glCompileShader(shaderID);
+    GLCall(glCompileShader(shaderID));
     GLint status;
     glGetShaderiv(shaderID, GL_COMPILE_STATUS, &status);
     if (status != GL_TRUE) {
@@ -100,7 +101,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
         std::cout << "[-] Shader compilation error in " << m_filePath << std::endl; 
         std::cout << "\t" << log << std::endl;
         
-        glDeleteShader(shaderID);
+        GLCall(glDeleteShader(shaderID));
         return 0;
     }
     return shaderID;
@@ -108,11 +109,16 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 
 void Shader::SetUniform2f(const std::string& name, float v0, float v1) 
 {
-    glUniform2f(GetUniformLocation(name), v0, v1);
+    GLCall(glUniform2f(GetUniformLocation(name), v0, v1));
 }
 
 int Shader::GetUniformLocation(const std::string& name) 
 {
-    int location = glGetUniformLocation(m_rendererID, name.c_str());
+    if (m_uniformLocationCache.find(name) != m_uniformLocationCache.end()) {
+        return m_uniformLocationCache[name];
+    }
+
+    GLCall(int location = glGetUniformLocation(m_rendererID, name.c_str()));
+    m_uniformLocationCache[name] = location;
     return location;  
 }

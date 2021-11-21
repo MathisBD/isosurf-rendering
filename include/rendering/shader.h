@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <GL/glew.h>
+#include <unordered_map>
 
 class Shader
 {
@@ -21,7 +22,8 @@ private:
 
     unsigned int m_rendererID;
     std::string m_filePath;
-    
+    std::unordered_map<std::string, int> m_uniformLocationCache;
+
     ShaderSource LoadSource();
     unsigned int CreateProgram(const ShaderSource& source);
     unsigned int CompileShader(unsigned int type, const std::string& source);

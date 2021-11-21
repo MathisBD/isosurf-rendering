@@ -64,7 +64,6 @@ void Application::MoveCamera()
     }
 }
 
-
 static void LayoutVector(const glm::vec3& vect, float* array)
 {
     array[0] = vect.x;
@@ -76,26 +75,21 @@ void Application::MainLoop()
 {
     // layout the geometry in a flat array
     size_t count = m_scene->GetTriangles().size();
-    std::cout << "count = " << count << std::endl;
     float* vertices = new float[6 * count];
     for (size_t i = 0; i < count; i++) {
         const Vertex& vert = m_scene->GetTriangles()[i];
         LayoutVector(vert.m_position, vertices + 6*i);
         LayoutVector(vert.m_color, vertices + 6*i + 3);
     }
-    
     // vertex buffer
     VertexBuffer vb(vertices, 6 * count * sizeof(float));
-
     // vertex buffer layout
     VertexBufferLayout layout;
     layout.Push<float>(3); // vertex position 
     layout.Push<float>(3); // vertex color
-    
     // vertex array
     VertexArray va;
     va.AddBuffer(vb, layout);
-
     // shader
     Shader shader("../shaders/Basic.shader");
 
