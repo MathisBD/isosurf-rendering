@@ -18,6 +18,7 @@ protected:
     void InitGlew();
     void SetupInput();
     void MoveCamera();
+    void InitImGui();
     virtual void CreateScene() = 0;
 public:
     const static int WINDOW_PIXEL_WIDTH = 1200;

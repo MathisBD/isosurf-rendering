@@ -3,6 +3,9 @@
 #include "rendering/shader.h"
 #include "timer.h"
 #include <iostream>
+#include "third_party/imgui/imgui.h"
+#include "third_party/imgui/imgui_impl_glfw.h"
+#include "third_party/imgui/imgui_impl_opengl3.h"
 
 
 void Application::CreateWindow()
@@ -33,6 +36,23 @@ void Application::SetupInput()
     m_inputMgr->SetupCallbacks(m_window);
 }
 
+void Application::InitImGui()
+{
+    // imgui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    
+    // imgui style
+    ImGui::StyleColorsDark();
+    
+    // imgui backend
+    const char* glsl_version = "#version 130";
+    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+}
+
 
 Application::Application()
 {
@@ -43,6 +63,7 @@ void Application::Initialize()
 {
     CreateWindow();
     InitGlew();
+    InitImGui();
     SetupInput();
     CreateScene();
     m_renderer = new Renderer();
@@ -99,8 +120,21 @@ void Application::MainLoop()
         Timer::UpdateTime();
         MoveCamera();
         m_renderer->Clear();
-        
-        // uniforms
+
+        // ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        {
+            ImGui::Begin("Application info");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); 
+            ImGui::End();
+        }
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Renderer frame
         const Camera& cam = m_scene->GetCamera();
         shader.Bind();
         shader.SetUniform2f(
@@ -111,8 +145,9 @@ void Application::MainLoop()
             "u_cameraViewSize", 
             (cam.m_viewHeight * Application::WINDOW_PIXEL_WIDTH) / Application::WINDOW_PIXEL_HEIGHT,
             cam.m_viewHeight);
-    
         m_renderer->Draw(va, shader, m_scene->GetTriangles().size());
+        
+        
         glfwSwapBuffers(m_window);
         glfwPollEvents();
     }   
@@ -121,6 +156,11 @@ void Application::MainLoop()
 
 void Application::Cleanup()
 {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(m_window);
     glfwTerminate();
 }
 

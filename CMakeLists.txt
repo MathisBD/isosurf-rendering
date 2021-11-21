@@ -29,3 +29,6 @@ target_link_libraries(test glfw)
 find_package(glm REQUIRED)
 target_include_directories(test PUBLIC ${GLM_INCLUDE_DIRS})
 target_link_libraries(test ${GLM_LIBRARIES})
+
+# DL (needed for IMGUI to work)
+target_link_libraries(test dl)
