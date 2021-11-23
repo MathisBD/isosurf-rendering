@@ -29,6 +29,8 @@ void InputManager::KeyCallback(int key, int action)
         case GLFW_KEY_RIGHT: m_rightKey = KeyState::PRESSED; break;
         case GLFW_KEY_UP: m_upKey = KeyState::PRESSED; break;
         case GLFW_KEY_DOWN: m_downKey = KeyState::PRESSED; break;
+        case GLFW_KEY_RIGHT_SHIFT: m_rShiftKey = KeyState::PRESSED; break;
+        case GLFW_KEY_RIGHT_CONTROL: m_rCtrlKey = KeyState::PRESSED; break;
         default: break;
         }
     }
@@ -38,6 +40,8 @@ void InputManager::KeyCallback(int key, int action)
         case GLFW_KEY_RIGHT: m_rightKey = KeyState::RELEASED; break;
         case GLFW_KEY_UP: m_upKey = KeyState::RELEASED; break;
         case GLFW_KEY_DOWN: m_downKey = KeyState::RELEASED; break;
+        case GLFW_KEY_RIGHT_SHIFT: m_rShiftKey = KeyState::RELEASED; break;
+        case GLFW_KEY_RIGHT_CONTROL: m_rCtrlKey = KeyState::RELEASED; break;
         default: break;
         }
     }

@@ -17,6 +17,8 @@ public:
     KeyState m_rightKey = KeyState::RELEASED;
     KeyState m_upKey = KeyState::RELEASED;
     KeyState m_downKey = KeyState::RELEASED;
+    KeyState m_rShiftKey = KeyState::RELEASED;
+    KeyState m_rCtrlKey = KeyState::RELEASED;
     KeyState m_leftMouse = KeyState::RELEASED;
     KeyState m_rightMouse = KeyState::RELEASED;
 

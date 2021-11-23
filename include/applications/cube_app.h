@@ -13,6 +13,11 @@ protected:
     Camera* m_camera;
     Mesh* m_mesh;
     Shader* m_shader;
+ 
+    // camera rotation
+    bool m_rotateCamera = false;
+    glm::vec2 m_prevCursorPos;
+
     
     void Update() override;
     void Render() override;
