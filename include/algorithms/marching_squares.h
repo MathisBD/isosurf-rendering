@@ -1,6 +1,5 @@
-#pragma once
+/*#pragma once
 #include "square_grid.h"
-#include "triangle_scene.h"
 #include <array>
 
 
@@ -42,11 +41,11 @@ private:
 public:
     float (*m_density)(glm::vec2 pos);
     SquareGrid* m_grid;
-    TriangleScene* m_triangleScene;
+    Mesh* m_triangleScene;
 
     static void InitTable();
 
     MarchingSquares(float (*density)(glm::vec2 pos), SquareGrid* grid);
     // puts the result in m_triangleScene
     void Triangulate();
-};
+};*/

@@ -1,4 +1,4 @@
-#include "algorithms/marching_squares.h"
+/*#include "algorithms/marching_squares.h"
 
 void MarchingSquares::InitTable()
 {
@@ -27,7 +27,7 @@ void MarchingSquares::InitTable()
 MarchingSquares::MarchingSquares(float (*density)(glm::vec2 pos), SquareGrid* grid) :
     m_density(density), m_grid(grid)
 {
-    m_triangleScene = new TriangleScene();
+    m_triangleScene = new Mesh();
 }
 
 void MarchingSquares::Triangulate()
@@ -118,4 +118,4 @@ glm::vec2 MarchingSquares::SurfacePoint(const edge& e)
         }
     }
     return (start + end) / 2.0f;
-}
+}*/

@@ -1,9 +1,9 @@
-#include "applications/sandbox.h"
+/*#include "applications/ms_app.h"
 #include "algorithms/square_grid.h"
 #include "algorithms/marching_squares.h"
 
 
-Sandbox::Sandbox()
+MSTest::MSTest()
 {
 
 }
@@ -14,7 +14,7 @@ float Density(glm::vec2 pos)
     return 3.0f - glm::length(pos);
 }
 
-void Sandbox::CreateScene() 
+void MSTest::CreateScene() 
 {
     glm::vec3 red = glm::vec3(1.0, 0.0, 0.0);
     glm::vec3 blue = glm::vec3(0.0, 0.0, 1.0);
@@ -48,3 +48,4 @@ void Sandbox::CreateScene()
             lineWidth);
     }
 }
+*/

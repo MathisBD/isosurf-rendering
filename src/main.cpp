@@ -1,11 +1,9 @@
-#include "applications/sandbox.h"
+#include "applications/cube_app.h"
 
 
 int main()
 {
-    auto app = Sandbox();
-    app.Initialize();
+    auto app = CubeApp();
     app.MainLoop();
-    app.Cleanup();
     return 0;
 }

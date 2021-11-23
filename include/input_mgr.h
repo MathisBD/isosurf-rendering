@@ -1,6 +1,7 @@
 #pragma once
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 
 enum class KeyState
@@ -16,8 +17,25 @@ public:
     KeyState m_rightKey = KeyState::RELEASED;
     KeyState m_upKey = KeyState::RELEASED;
     KeyState m_downKey = KeyState::RELEASED;
-    
-    InputManager();
-    void SetupCallbacks(GLFWwindow* window);
+    KeyState m_leftMouse = KeyState::RELEASED;
+    KeyState m_rightMouse = KeyState::RELEASED;
+
+    InputManager(GLFWwindow* window);
+
+    void ShowCursor();
+    void HideCursor();
+    void DisableCursor();
+    // Axis orientation :
+    // x : left to right.
+    // y : bottom to top.
+    // The center of the screen is at (0, 0).
+    // The borders of the screen are at -1 and +1.
+    glm::vec2 CursorPosition();
+
+    // This shouldn't be called from anywhere else than in the input manager.
     void KeyCallback(int key, int action);
+    // This shouldn't be called from anywhere else than in the input manager.
+    void MouseButtonCallback(int button, int action);
+private:
+    GLFWwindow* m_window;
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 #include <unordered_map>
 
 class Shader
@@ -10,6 +11,7 @@ public:
     ~Shader();
 
     void SetUniform2f(const std::string& name, float v0, float v1);
+    void SetUniformMat4f(const std::string& name, const glm::mat4x4& mat);
 
     void Bind() const;
     void Unbind() const;

@@ -2,10 +2,10 @@
 #include "application.h"
 
 
-class Sandbox : public Application
+class MSTest : public Application
 {
 public:
-    Sandbox();
+    MSTest();
 protected:
     void CreateScene() override;
 };

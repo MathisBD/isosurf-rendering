@@ -4,6 +4,7 @@
 #include <iostream>
 #include <assert.h>
 #include "rendering/gl_errors.h"
+#include <glm/gtc/type_ptr.hpp>
 
 
 Shader::Shader(const std::string& filePath) : m_filePath(filePath)
@@ -110,6 +111,11 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 void Shader::SetUniform2f(const std::string& name, float v0, float v1) 
 {
     GLCall(glUniform2f(GetUniformLocation(name), v0, v1));
+}
+
+void Shader::SetUniformMat4f(const std::string& name, const glm::mat4x4& mat) 
+{
+    GLCall(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(mat)));    
 }
 
 int Shader::GetUniformLocation(const std::string& name) 
