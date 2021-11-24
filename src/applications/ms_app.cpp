@@ -22,7 +22,7 @@ void MSTest::CreateScene()
     glm::vec3 white = glm::vec3(1.0, 1.0, 1.0);
 
     MarchingSquares::InitTable();
-    auto grid = new SquareGrid(10, 10, -10.0, 10.0, -10.0, 10.0);
+    auto grid = new CubeGrid(10, 10, -10.0, 10.0, -10.0, 10.0);
     auto ms = new MarchingSquares(&Density, grid);
     ms->Triangulate();
 

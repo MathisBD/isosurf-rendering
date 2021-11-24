@@ -40,12 +40,12 @@ private:
     glm::vec2 SurfacePoint(const edge& e);
 public:
     float (*m_density)(glm::vec2 pos);
-    SquareGrid* m_grid;
+    CubeGrid* m_grid;
     Mesh* m_triangleScene;
 
     static void InitTable();
 
-    MarchingSquares(float (*density)(glm::vec2 pos), SquareGrid* grid);
+    MarchingSquares(float (*density)(glm::vec2 pos), CubeGrid* grid);
     // puts the result in m_triangleScene
     void Triangulate();
 };*/

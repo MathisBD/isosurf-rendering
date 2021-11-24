@@ -1,7 +1,7 @@
 #include "rendering/mesh.h"
 
 
-Mesh::Mesh() 
+Mesh::Mesh() : m_vertexCount(0)
 {
 
 }
@@ -21,13 +21,15 @@ void Mesh::LayoutVector(const glm::vec3& v)
     m_buffer.push_back(v.z);
 }
 
-void Mesh::AddVertex(const glm::vec3& position, const glm::vec3& color) 
+uint32_t Mesh::AddVertex(const glm::vec3& position, const glm::vec3& color) 
 {
     LayoutVector(position);
     LayoutVector(color);
+    m_vertexCount++;
+    return m_vertexCount-1;
 }
 
-void Mesh::AddTriangle(IndexBuffer::index_t i1, IndexBuffer::index_t i2, IndexBuffer::index_t i3) 
+void Mesh::AddTriangle(uint32_t i1, uint32_t i2, uint32_t i3) 
 {
     m_indices.push_back(i1);
     m_indices.push_back(i2);

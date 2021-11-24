@@ -4,14 +4,27 @@
 #include "third_party/imgui/imgui_impl_glfw.h"
 #include "third_party/imgui/imgui_impl_opengl3.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include "algorithms/cube_grid.h"
 
+
+
+static float Circle(glm::vec3 pos)
+{
+    return 5 - glm::length(pos);
+}
 
 CubeApp::CubeApp()
 {
     m_shader = new Shader("../shaders/Basic.shader");
     m_camera = new Camera({0, 0, 5.0f}, 10.0f, 1000.0f);
-   
-    glm::vec3 red(1, 0, 0);
+    
+    // Create the marching cubes chunk.
+    const auto& grid = CubeGrid(
+        {64, 64, 64},
+        {-10, -10, -10},
+        {10, 10, 10});
+    m_mcChunk = new MCChunk(grid, Circle);
+    /*glm::vec3 red(1, 0, 0);
     m_mesh = new Mesh();
 
     m_mesh->AddVertex({0, 0, 0}, red); 
@@ -38,7 +51,7 @@ CubeApp::CubeApp()
     m_mesh->AddTriangle(7, 3, 2);
     m_mesh->AddTriangle(7, 3, 1);
     
-    m_mesh->Build();
+    m_mesh->Build();*/
 }
 
 CubeApp::~CubeApp() 

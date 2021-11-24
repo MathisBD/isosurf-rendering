@@ -24,7 +24,7 @@ void MarchingSquares::InitTable()
 }
 
 
-MarchingSquares::MarchingSquares(float (*density)(glm::vec2 pos), SquareGrid* grid) :
+MarchingSquares::MarchingSquares(float (*density)(glm::vec2 pos), CubeGrid* grid) :
     m_density(density), m_grid(grid)
 {
     m_triangleScene = new Mesh();

@@ -7,21 +7,22 @@
 typedef struct 
 {
     glm::vec3 position;
-    float density;
+    bool insideShape;
 } MCVertex;
 
 typedef struct
 {
-    uint32_t firstVertexIdx;
-    uint32_t secondVertexIdx;
+    // Does the isosurface cross this edge ?
     bool hasCrossing;
-    glm::vec3 crossingPos;
+    // The index in the mesh of the isosurface vertex
+    // on this edge. Only meaningful when hasCrossing==true.
+    uint32_t isoVertexIdx;
 } MCEdge;
 
 typedef struct
 {
-    // index of the bottom left vertex
-    uint32_t vertexIdx;
+    // position of the bottom left vertex
+    uint32_t x, y, z;
     // indices of all the cell edges
     uint32_t edgesIndices[12];
 } MCCell;
@@ -47,24 +48,25 @@ private:
     uint32_t m_dim;
     float (*m_density)(glm::vec3 position);
     
-    // the vertex at (x,y,z) is stored at Index3D(x,y,z,m_dim).
+    // the vertex at (x,y,z) is stored at Index3D(x,y,z).
     MCVertex* m_vertices;
     
     // the edges are stored :
-    //     (x,y,z)->(x+1,y,z) at 3*Index3D(x,y,z,m_dim)
-    //     (x,y,z)->(x,y+1,z) at 3*Index3D(x,y,z,m_dim)+1
-    //     (x,y,z)->(x,y,z+1) at 3*Index3D(x,y,z,m_dim)+2
+    //     (x,y,z)->(x+1,y,z) at 3*Index3D(x,y,z)
+    //     (x,y,z)->(x,y+1,z) at 3*Index3D(x,y,z)+1
+    //     (x,y,z)->(x,y,z+1) at 3*Index3D(x,y,z)+2
     MCEdge* m_edges;
     
     Mesh m_mesh;
 
-    static inline uint32_t Index3D(uint32_t x, uint32_t y, uint32_t z, uint32_t dim);
+    inline uint32_t Index3D(uint32_t x, uint32_t y, uint32_t z);
     
     void LabelVertices(glm::vec3*** vertexPositions);
-    void LabelCells();
     void LabelEdges();
-    void CalculateEdgeData(MCEdge* edge);
-    void LabelCells();
+    void CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction);
     
-    void TriangulateCells();
+    void Triangulate();
+    uint8_t HashCell(const MCCell& cell);
+    void CalculateCellEdges(MCCell& cell);
+    void GenTriangles(const int triangles[16], const MCCell& cell);
 };
