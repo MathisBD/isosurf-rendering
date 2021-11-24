@@ -17,7 +17,7 @@ public:
     void Move(const glm::vec3& direction);
     void RotateHorizontal(float x);
     void RotateVertical(float y);
-    glm::mat4x4 ProjectionMatrix(float FOVdev, float aspectRatio, float clipNear);
+    glm::mat4x4 ProjectionMatrix(float FOVdev, float aspectRatio, float clipNear, float clipFar);
 private:
     glm::vec3 m_position;
     glm::vec3 m_forward;

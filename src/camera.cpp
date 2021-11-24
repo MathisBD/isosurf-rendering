@@ -48,13 +48,13 @@ void Camera::RotateVertical(float y)
     }  
 }
 
-glm::mat4x4 Camera::ProjectionMatrix(float FOVdeg, float aspectRatio, float clipNear) 
+glm::mat4x4 Camera::ProjectionMatrix(float FOVdeg, float aspectRatio, float clipNear, float clipFar) 
 {
     assert(FOVdeg > 0.0f);
     assert(aspectRatio > 0.0f);
     assert(clipNear > 0.0f);
 
     glm::mat4 view = glm::lookAt(m_position, m_position + m_forward, m_up);  
-    glm::mat4 proj = glm::infinitePerspective(glm::radians(FOVdeg), aspectRatio, clipNear);
+    glm::mat4 proj = glm::perspective(glm::radians(FOVdeg), aspectRatio, clipNear, clipFar);
     return proj * view; 
 }

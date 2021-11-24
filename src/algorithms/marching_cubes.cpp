@@ -2,33 +2,36 @@
 #include "algorithms/mc_tables.h"
 
 
+
 inline uint32_t MCChunk::Index3D(uint32_t x, uint32_t y, uint32_t z) 
 {
-    return x + m_dim * y + m_dim * m_dim * z; 
+    return x + m_dim.x * y + m_dim.x * m_dim.y * z; 
 }
 
-MCChunk::MCChunk(
-    uint32_t dim, 
-    glm::vec3*** vertexPositions, 
-    float (*density)(glm::vec3 position)) :
-    m_dim(dim), m_density(density)
+MCChunk::MCChunk(const CubeGrid& grid, float (*density)(glm::vec3 position)) :
+    m_dim(grid.dim), m_density(density)
 {
     m_mesh = Mesh();
-    LabelVertices(vertexPositions);
+    LabelVertices(grid);
     LabelEdges();
     Triangulate();
     m_mesh.Build();
 }
 
-void MCChunk::LabelVertices(glm::vec3*** vertexPositions) 
+const Mesh& MCChunk::GetMesh() 
 {
-    m_vertices = new MCVertex[m_dim*m_dim*m_dim];
+    return m_mesh;
+}
 
-    for (uint32_t x = 0; x < m_dim; x++) {
-        for (uint32_t y = 0; y < m_dim; y++) {
-            for (uint32_t z = 0; z < m_dim; z++) {
+void MCChunk::LabelVertices(const CubeGrid& grid) 
+{
+    m_vertices = new MCVertex[m_dim.x*m_dim.y*m_dim.z];
+
+    for (uint32_t x = 0; x < m_dim.x; x++) {
+        for (uint32_t y = 0; y < m_dim.y; y++) {
+            for (uint32_t z = 0; z < m_dim.z; z++) {
                 MCVertex& v = m_vertices[Index3D(x, y, z)];
-                v.position = vertexPositions[x][y][z];
+                v.position = grid.WorldPosition({x, y, z});
                 v.insideShape = (m_density(v.position) > 0);
             }
         }
@@ -37,21 +40,21 @@ void MCChunk::LabelVertices(glm::vec3*** vertexPositions)
 
 void MCChunk::LabelEdges() 
 {
-    m_edges = new MCEdge[3*m_dim*m_dim*m_dim];
+    m_edges = new MCEdge[3*m_dim.x*m_dim.y*m_dim.z];
 
-    for (uint32_t x = 0; x < m_dim; x++) {
-        for (uint32_t y = 0; y < m_dim; y++) {
-            for (uint32_t z = 0; z < m_dim; z++) {
+    for (uint32_t x = 0; x < m_dim.x; x++) {
+        for (uint32_t y = 0; y < m_dim.y; y++) {
+            for (uint32_t z = 0; z < m_dim.z; z++) {
                 // x->x+1
-                if (x < m_dim-1) {
+                if (x < m_dim.x-1) {
                     CalculateEdgeData(Index3D(x, y, z), Index3D(x+1, y, z), 0);
                 }
                 // y->y+1
-                if (y < m_dim-1) {
+                if (y < m_dim.y-1) {
                     CalculateEdgeData(Index3D(x, y, z), Index3D(x, y+1, z), 1);
                 }
                 // z->z+1
-                if (z < m_dim-1) {
+                if (z < m_dim.z-1) {
                     CalculateEdgeData(Index3D(x, y, z), Index3D(x, y, z+1), 2);
                 }
             }
@@ -91,9 +94,9 @@ void MCChunk::CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction)
 void MCChunk::Triangulate()
 {
     MCCell cell;
-    for (uint32_t x = 0; x < m_dim-1; x++) {
-        for (uint32_t y = 0; y < m_dim-1; y++) {
-            for (uint32_t z = 0; z < m_dim-1; z++) {
+    for (uint32_t x = 0; x < m_dim.x-1; x++) {
+        for (uint32_t y = 0; y < m_dim.y-1; y++) {
+            for (uint32_t z = 0; z < m_dim.z-1; z++) {
                 cell.x = x;
                 cell.y = y;
                 cell.z = z;

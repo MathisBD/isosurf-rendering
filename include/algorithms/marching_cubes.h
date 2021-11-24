@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "rendering/mesh.h"
+#include "algorithms/cube_grid.h"
 
 
 typedef struct 
@@ -32,10 +33,7 @@ class MCChunk
 public:
     // dim is the number of vertices along each dimension.
     // There are dim-1 cells along each dimension.
-    MCChunk(
-        uint32_t dim, 
-        glm::vec3*** vertexPositions, 
-        float (*density)(glm::vec3 position));
+    MCChunk(const CubeGrid& grid, float (*density)(glm::vec3 position));
     ~MCChunk();
 
     const Mesh& GetMesh();
@@ -45,7 +43,7 @@ private:
     // on an edge.
     const static uint32_t BIN_SEARCH_ITERATIONS = 5;
 
-    uint32_t m_dim;
+    glm::u32vec3 m_dim;
     float (*m_density)(glm::vec3 position);
     
     // the vertex at (x,y,z) is stored at Index3D(x,y,z).
@@ -61,7 +59,7 @@ private:
 
     inline uint32_t Index3D(uint32_t x, uint32_t y, uint32_t z);
     
-    void LabelVertices(glm::vec3*** vertexPositions);
+    void LabelVertices(const CubeGrid& grid);
     void LabelEdges();
     void CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction);
     

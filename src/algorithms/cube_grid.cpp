@@ -17,3 +17,10 @@ CubeGrid::CubeGrid(
     })
 {
 }
+
+#define VEC_MUL(v1, v2) glm::vec3((v1).x*(v2).x, (v1).y*(v2).y, (v1).z*(v2).z)
+
+glm::vec3 CubeGrid::WorldPosition(glm::u32vec3 pos) const 
+{
+    return lowVertex + VEC_MUL(pos, cellSize);    
+}

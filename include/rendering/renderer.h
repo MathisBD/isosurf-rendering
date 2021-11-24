@@ -11,4 +11,5 @@ public:
     Renderer();
     void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
     void Clear() const;
+    void SetBackgroundColor(const glm::vec4& color);
 };

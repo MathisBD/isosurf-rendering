@@ -30,6 +30,7 @@ private:
     std::vector<IndexBuffer::index_t> m_indices;
     
     // these are built only when Build() is called
+    bool m_builtMesh;
     VertexArray* m_va;
     IndexBuffer* m_ib;
     VertexBuffer* m_vb;
