@@ -47,15 +47,15 @@ private:
     float (*m_density)(glm::vec3 position);
     
     // the vertex at (x,y,z) is stored at Index3D(x,y,z).
-    MCVertex* m_vertices;
+    MCVertex* m_vertices = nullptr;
     
     // the edges are stored :
     //     (x,y,z)->(x+1,y,z) at 3*Index3D(x,y,z)
     //     (x,y,z)->(x,y+1,z) at 3*Index3D(x,y,z)+1
     //     (x,y,z)->(x,y,z+1) at 3*Index3D(x,y,z)+2
-    MCEdge* m_edges;
+    MCEdge* m_edges = nullptr;
     
-    Mesh m_mesh;
+    Mesh* m_mesh = nullptr;
 
     inline uint32_t Index3D(uint32_t x, uint32_t y, uint32_t z);
     

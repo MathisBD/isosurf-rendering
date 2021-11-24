@@ -46,7 +46,7 @@ void Mesh::Build()
 
     m_ib = new IndexBuffer(m_indices.data(), m_indices.size());
 
-    printf("buffer count = %d, layout stride = %d\n", m_buffer.size(), layout.GetStride());
+    printf("MESH: buffer count = %d\n", m_buffer.size());
     m_vb = new VertexBuffer(m_buffer.data(), m_buffer.size() * sizeof(float));
     m_va = new VertexArray();
     m_va->AddBuffer(*m_vb, layout);

@@ -6,7 +6,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "algorithms/cube_grid.h"
 #include "rendering/gl_errors.h"
-
+#include <chrono>
+#include <stdio.h>
 
 
 static float Circle(glm::vec3 pos)
@@ -17,6 +18,7 @@ static float Circle(glm::vec3 pos)
     return 5 - glm::length(pos);
 }
 
+
 CubeApp::CubeApp()
 {
     m_shader = new Shader("../shaders/Basic.shader");
@@ -24,11 +26,14 @@ CubeApp::CubeApp()
 
     // Create the marching cubes chunk.
     const auto& grid = CubeGrid(
-        {20, 20, 20},
+        {128, 128, 128},
         {-10, -10, -10},
         {10, 10, 10});
+    auto start = std::chrono::high_resolution_clock::now();
     m_mcChunk = new MCChunk(grid, Circle);
-
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    printf("Time to run marching cubes : %dms\n", time.count());
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
 }
 
@@ -37,9 +42,8 @@ CubeApp::~CubeApp()
     delete m_camera;
     delete m_mesh;
     delete m_shader;
+    delete m_mcChunk;
 }
-
-
 
 void CubeApp::Update()
 {

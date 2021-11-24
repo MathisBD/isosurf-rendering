@@ -11,10 +11,10 @@ public:
     CubeApp();
     ~CubeApp();
 protected:
-    Camera* m_camera;
-    Mesh* m_mesh;
-    Shader* m_shader;
-    MCChunk* m_mcChunk;
+    Camera* m_camera = nullptr;
+    Mesh* m_mesh = nullptr;
+    Shader* m_shader = nullptr;
+    MCChunk* m_mcChunk = nullptr;
  
     // camera rotation
     bool m_rotateCamera = false;

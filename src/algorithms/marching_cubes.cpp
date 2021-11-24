@@ -11,16 +11,23 @@ inline uint32_t MCChunk::Index3D(uint32_t x, uint32_t y, uint32_t z)
 MCChunk::MCChunk(const CubeGrid& grid, float (*density)(glm::vec3 position)) :
     m_dim(grid.dim), m_density(density)
 {
-    m_mesh = Mesh();
+    m_mesh = new Mesh();
     LabelVertices(grid);
     LabelEdges();
     Triangulate();
-    m_mesh.Build();
+    m_mesh->Build();
+}
+
+MCChunk::~MCChunk() 
+{
+    delete m_mesh;
+    delete m_vertices;
+    delete m_edges;  
 }
 
 const Mesh& MCChunk::GetMesh() 
 {
-    return m_mesh;
+    return *m_mesh;
 }
 
 void MCChunk::LabelVertices(const CubeGrid& grid) 
@@ -86,7 +93,7 @@ void MCChunk::CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction)
             }
         }
         glm::vec3 isoVertexPos = (start + end) / 2.0f;
-        edge.isoVertexIdx = m_mesh.AddVertex(isoVertexPos, {1, 0, 0});
+        edge.isoVertexIdx = m_mesh->AddVertex(isoVertexPos, {1, 0, 0});
     }
 }
 
@@ -149,6 +156,6 @@ void MCChunk::GenTriangles(const int triangles[16], const MCCell& cell)
         const MCEdge& e2 = m_edges[cell.edgesIndices[e2Idx]];
         const MCEdge& e3 = m_edges[cell.edgesIndices[e3Idx]];
         
-        m_mesh.AddTriangle(e1.isoVertexIdx, e2.isoVertexIdx, e3.isoVertexIdx);
+        m_mesh->AddTriangle(e1.isoVertexIdx, e2.isoVertexIdx, e3.isoVertexIdx);
     }
 }

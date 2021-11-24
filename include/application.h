@@ -8,9 +8,9 @@
 class Application
 {
 protected:
-    GLFWwindow* m_window;
-    Renderer* m_renderer;
-    InputManager* m_inputMgr;
+    GLFWwindow* m_window = nullptr;
+    Renderer* m_renderer = nullptr;
+    InputManager* m_inputMgr = nullptr;
     
     void CreateWindow();
     void InitGlew();
