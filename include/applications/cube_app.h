@@ -1,5 +1,5 @@
 #pragma once
-#include "application.h"
+#include "applications/application.h"
 #include "rendering/mesh.h"
 #include "camera.h"
 #include "rendering/shader.h"

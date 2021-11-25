@@ -9,7 +9,7 @@
 Camera::Camera(const glm::vec3& position, float moveSpeed, float rotateSpeed) :
     m_position(position), 
     m_forward(0.0f, 0.0f, -1.0f), 
-    m_up(0.0f, 0.1f, 0.0f),
+    m_up(0.0f, 1.0f, 0.0f),
     m_moveSpeed(moveSpeed),
     m_rotateSpeed(rotateSpeed)
 {

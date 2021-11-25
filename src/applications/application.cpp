@@ -1,4 +1,4 @@
-#include "application.h"
+#include "applications/application.h"
 #include <stdio.h>
 #include "rendering/shader.h"
 #include "timer.h"

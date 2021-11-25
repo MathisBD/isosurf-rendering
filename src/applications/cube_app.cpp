@@ -33,7 +33,7 @@ CubeApp::CubeApp()
     m_mcChunk = new MCChunk(grid, Circle);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    printf("Time to run marching cubes : %dms\n", time.count());
+    printf("Time to run marching cubes : %ldms\n", time.count());
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
 }
 
@@ -83,8 +83,8 @@ void CubeApp::Update()
     }
     if (m_rotateCamera) {
         glm::vec2 cursorPos = m_inputMgr->CursorPosition();
-        m_camera->RotateHorizontal(cursorPos.x - m_prevCursorPos.x);
-        m_camera->RotateVertical(cursorPos.y - m_prevCursorPos.y);
+        m_camera->RotateHorizontal(-(cursorPos.x - m_prevCursorPos.x));
+        m_camera->RotateVertical(-(cursorPos.y - m_prevCursorPos.y));
         m_prevCursorPos = cursorPos;
     }
 }
@@ -112,7 +112,7 @@ void CubeApp::Render()
         45.0f, 
         WINDOW_PIXEL_WIDTH / (float)WINDOW_PIXEL_HEIGHT,
         0.1f,
-        10.0f);
+        1000.0f);
     m_shader->Bind();
     m_shader->SetUniformMat4f("u_MVP", proj);
     const Mesh& mesh = m_mcChunk->GetMesh(); 

@@ -1,5 +1,5 @@
 #include "input_mgr.h"
-#include "application.h"
+#include "applications/application.h"
 
 
 static void ProxyMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
