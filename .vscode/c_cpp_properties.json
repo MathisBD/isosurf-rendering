@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/usr/include",
+                "/usr/local/include",
+                "${workspaceFolder}/include/**"
+            ],
+            "defines": [],
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

@@ -1,58 +1,9 @@
 #pragma once
 #include <unordered_map>
-#include <glm/glm.hpp>
-#include <vector>
+#include "algorithms/tetra.h"
+#include "algorithms/diamond.h"
 
 
-typedef glm::u64vec3 vertex_t;
-
-
-// The representation used for tetrahedrons and diamonds is a tradeoff
-// between rendering speed / hierarchy split-merge speed. 
-// The hierarchy overhead will likely be small compared to the 
-// marching cubes computation time, so I chose to prioritize the rendering time.
-// I thus chose a rather explicit representation (with lots of pointers) rather
-// than an implicit representation (only store diamond centers essentially, and
-// decode all other diamond/tetra info from the centers). This way I can have
-// all the leaf tetra in a linked list, which should be very easy to traverse
-// for rendering.
-typedef struct _Tetra
-{
-    vertex_t vertices[4];
-    // The middle of the tetrahdera's longest edge.
-    // This is also the center of the tetrahedron's diamond.
-    vertex_t splitVertex;
-    struct _Tetra* children[2];
-    struct _Tetra* parent;
-    // leaf tetrahedrons are stored in a linked-list
-    struct _Tetra* nextLeaf;
-    struct _Tetra* prevLeaf;
-} Tetra;
-
-
-struct Diamond
-{
-public:
-    // All the info can be retrieved from only the center position.
-    // We cache it because there will likely be relatively few diamonds
-    // (much less than triangles in the mesh).
-    vertex_t center;
-    uint8_t depth;
-    uint8_t phase;
-    uint8_t level;
-    std::vector<Tetra*> activeTetras;
-
-    inline bool IsComplete() 
-    {
-        switch (phase) {
-        case 0: return activeTetras.size() >= 6;
-        case 1: return activeTetras.size() >= 4;
-        case 2: return activeTetras.size() >= 8;
-        }
-        assert(false);
-        return false;
-    }
-};
 
 // The tetra hierarchy is built on a regular grid 
 // with cells of unit size. The size of the grid
@@ -64,21 +15,42 @@ public:
     ~TetraHierarchy();
 
 private:
+    // The valid depths range from 0 to maxDepth included.
     uint32_t m_maxDepth;
-    // diamonds indexed by their center vertex.
-    std::unordered_map<vertex_t, Diamond> m_diamonds;
-    // linked list of tetrahedrons
+    // The valid coordinates range from 0 to maxCoord incuded.
+    uint32_t m_maxCoord;
+    // Diamonds indexed by their center vertex.
+    // We only store diamonds that have an active tetra.
+    std::unordered_map<vertex_t, Diamond*> m_diamonds;
+    // Linked list of tetrahedrons
     Tetra* m_firstLeafTetra = nullptr;
-    // TODO : add a memory pool for the tetras.
+    
+    // TODO : use a memory pool for the tetras.
 
-    std::vector<vertex_t> DiamondChildren(const Diamond& d);  
-    std::vector<vertex_t> DiamondParents(const Diamond& d);
-    //std::vector<vertex_t[4]> Tetrahedrons(const Diamond& d); 
- 
-    void DiamondPredicateSplit(const Diamond& d, bool force);
+    void InitDiamond(Diamond* d);
+    std::vector<vertex_t> InitChildren(Diamond* d);  
+    std::vector<vertex_t> InitParents(Diamond* d);
 
+    Diamond* FindOrCreateDiamond(const vertex_t& center);
+    bool ShouldSplit(const Diamond* d);
+    void CheckSplit(const Diamond* d, bool force);
+
+    // We should only split leaf tetrahedrons.
     // Remove t from the leaf list and add both its children.
     // Add the children to their respective diamond (to find it,
     // compute the middle of the child's longest edge).
     void SplitTetra(Tetra* t);
+    void AddToDiamond(Tetra* t);
+    void AddLeaf(Tetra* t);
+    void RemoveLeaf(Tetra* t);
+    vertex_t VertexMidpoint(const vertex_t& v1, const vertex_t& v2);
+    // Compute the indices (le1, le2) of the vertices
+    // of the longest edge of t.
+    // (i1, i2) are the indices of the other vertices.
+    void FindLongestEdge(
+        Tetra* t, 
+        uint8_t* le1, 
+        uint8_t* le2, 
+        uint8_t* i1, 
+        uint8_t* i2);
 };

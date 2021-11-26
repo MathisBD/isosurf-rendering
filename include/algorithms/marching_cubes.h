@@ -4,7 +4,6 @@
 #include "rendering/mesh.h"
 #include "algorithms/cube_grid.h"
 
-
 typedef struct 
 {
     glm::vec3 position;
