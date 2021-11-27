@@ -2,7 +2,9 @@
 #include <unordered_map>
 #include "algorithms/tetra.h"
 #include "algorithms/diamond.h"
-
+#include "algorithms/cube_grid.h"
+#include "glm/gtx/hash.hpp"
+#include "rendering/mesh.h"
 
 
 // The tetra hierarchy is built on a regular grid 
@@ -11,26 +13,32 @@
 class TetraHierarchy
 {
 public:
-    TetraHierarchy(uint32_t maxDepth);
+    TetraHierarchy(uint32_t maxLevel, const CubeGrid& grid);
     ~TetraHierarchy();
 
+    void SplitAll();
+    const Tetra* GetFirstLeafTetra() const;
+    const Mesh& GetOutlineMesh() const;
+    
+    // The valid coordinates range from 0 to MaxCoord(maxLevel) incuded.
+    inline static uint32_t MaxCoord(uint32_t maxLevel)
+    {
+        return (1UL << maxLevel);
+    }
 private:
-    // The valid depths range from 0 to maxDepth included.
-    uint32_t m_maxDepth;
-    // The valid coordinates range from 0 to maxCoord incuded.
-    uint32_t m_maxCoord;
+    // The valid depths range from 0 to 3*maxLevel+2 included.
+    uint32_t m_maxLevel;
+    CubeGrid m_grid;
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
     std::unordered_map<vertex_t, Diamond*> m_diamonds;
+    Diamond* m_rootDiamond;
     // Linked list of tetrahedrons
     Tetra* m_firstLeafTetra = nullptr;
-    
     // TODO : use a memory pool for the tetras.
+    Mesh* m_outline = nullptr;
 
-    void InitDiamond(Diamond* d);
-    std::vector<vertex_t> InitChildren(Diamond* d);  
-    std::vector<vertex_t> InitParents(Diamond* d);
-
+    void CreateRootDiamond();
     Diamond* FindOrCreateDiamond(const vertex_t& center);
     bool ShouldSplit(const Diamond* d);
     void CheckSplit(const Diamond* d, bool force);
@@ -53,4 +61,6 @@ private:
         uint8_t* le2, 
         uint8_t* i1, 
         uint8_t* i2);
+
+    void AddOutline(const Tetra* t);
 };

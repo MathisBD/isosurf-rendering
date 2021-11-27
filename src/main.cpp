@@ -1,9 +1,9 @@
-#include "applications/cube_app.h"
+#include "applications/tetra_app.h"
 
 
 int main()
 {
-    auto app = CubeApp();
+    auto app = TetraApp();
     app.MainLoop();
     return 0;
 }

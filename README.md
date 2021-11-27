@@ -43,11 +43,13 @@ I should probably extract the phase, level, and direction at the same time.
 to the rest of x/y/z. Example : if tx=0b11 and we add 1 to tx, tx will become 0b00
 and we add 1 to ox.) 
 
+# Diamond Children
 To get the children of a diamond :
     Phase 0 : add or substract 1 from exactly one odd coord of t (6 children).
     Phase 1 : add or substract 1 from exactly one odd coord of t (4 children).
     Phase 2 : add or substract 1 to all three coords of (t2 s1) (8 children).
 
+# Diamond Parents
 To get the parents of a diamond :
     Phase 0 : add or substract 1 to all three coords of t, taking care that the new version of (on t1) needs to have exactly one odd coordinate (3 parents).
     Phase 1 : add or substract 1 from exactly one even coord of t (2 parents).

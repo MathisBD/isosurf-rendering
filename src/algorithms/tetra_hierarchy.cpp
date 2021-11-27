@@ -2,11 +2,92 @@
 #include <assert.h>
 
 
+
+void TetraHierarchy::SplitAll() 
+{
+    CheckSplit(m_rootDiamond, false);    
+}
+
+const Tetra* TetraHierarchy::GetFirstLeafTetra() const 
+{
+    return m_firstLeafTetra;
+}
+
+const Mesh& TetraHierarchy::GetOutlineMesh() const 
+{
+    m_outline->Build();
+    return *m_outline;    
+}
+
+TetraHierarchy::TetraHierarchy(uint32_t maxLevel, const CubeGrid& grid) :
+    m_grid(grid.dim, grid.lowVertex, grid.highVertex)
+{
+    m_maxLevel = maxLevel;
+
+    uint32_t maxCoord = MaxCoord(m_maxLevel);
+    assert(m_grid.dim.x == maxCoord + 1);
+    assert(m_grid.dim.y == maxCoord + 1);
+    assert(m_grid.dim.z == maxCoord + 1);
+
+    m_outline = new Mesh();
+
+    CreateRootDiamond();
+}
+
+TetraHierarchy::~TetraHierarchy() 
+{
+    // TODO : keep track of all the allocated 
+    // tetras and diamonds, and free them all here.    
+}
+
+bool TetraHierarchy::ShouldSplit(const Diamond* d) 
+{
+    return true;
+}
+
+void TetraHierarchy::CreateRootDiamond()
+{
+    // Create the root diamond
+    uint32_t maxCoord = MaxCoord(m_maxLevel);
+    m_rootDiamond = FindOrCreateDiamond({ maxCoord>>1, maxCoord>>1, maxCoord>>1 });
+    // Create its 6 tetrahedra.
+    const vertex_t cube_verts[8] = {
+        { 0,        0,        0        },
+        { 0,        maxCoord, 0        },
+        { maxCoord, maxCoord, 0        },
+        { maxCoord, 0,        0        },
+        { 0,        0,        maxCoord },
+        { 0,        maxCoord, maxCoord },
+        { maxCoord, maxCoord, maxCoord },
+        { maxCoord, 0,        maxCoord }
+    };
+    // This is the split edge of the root diamond.
+    const uint8_t splitEdge[2] = { 0, 6 };
+    const uint8_t tetraEdges[6][2] = {
+        { 3, 7 },
+        { 7, 4 },
+        { 4, 5 },
+        { 5, 1 },
+        { 1, 2 },
+        { 2, 3 }
+    };
+    for (uint8_t i = 0; i < 6; i++) {
+        Tetra* t = new Tetra();
+        t->vertices[0] = cube_verts[splitEdge[0]];
+        t->vertices[1] = cube_verts[splitEdge[1]];
+        t->vertices[2] = cube_verts[tetraEdges[i][0]];
+        t->vertices[3] = cube_verts[tetraEdges[i][1]];
+        t->parent = t->children[0] = t->children[1] = nullptr;
+        AddLeaf(t);
+        AddOutline(t);
+    }
+}
+
 inline Diamond* TetraHierarchy::FindOrCreateDiamond(const vertex_t& center) 
 {
     auto it = m_diamonds.find(center);
     if (it == m_diamonds.end()) {
-        Diamond* d = new Diamond(center);
+        Diamond* d = new Diamond(center, m_maxLevel);
         m_diamonds.insert({center, d});
         return d;
     }
@@ -20,33 +101,31 @@ void TetraHierarchy::CheckSplit(const Diamond* d, bool force)
     if (!force && !ShouldSplit(d)) {
         return;
     }
-    if (d->depth >= m_maxDepth) {
+    if (d->level == m_maxLevel && d->phase == 2) {
         return;
     }
 
-    // ensure d is complete
-    if (d->depth > 0) {
-        for (const vertex_t& p : Parents(d)) {
-            // it is okay to create a diamond pd
-            // since we are going to add tetras to it anyways.
-            Diamond* pd = FindOrCreateDiamond(p);
-            if (!pd->IsComplete()) {
-                CheckSplit(pd, true);
-            }
-        }    
-    }
+    // Ensure d is complete.
+    for (const vertex_t& p : d->parents) {
+        // It is okay to create a diamond pd
+        // since we are going to add tetras to it anyways.
+        Diamond* pd = FindOrCreateDiamond(p);
+        if (!pd->IsComplete()) {
+            CheckSplit(pd, true);
+        }
+    }    
     assert(d->IsComplete());
 
-    // actually split the diamond.
-    // after this the diamond structure should still be sound.
+    // Actually split the diamond.
+    // After this the diamond structure should still be sound.
     for (Tetra* t : d->activeTetras) {
         SplitTetra(t);
     }
 
-    // recurse on children
+    // Recurse on children.
     if (!force) {
-        for (const vertex_t& c : Children(d)) {
-            // this should not create a new diamond 
+        for (const vertex_t& c : d->children) {
+            // This should not create a new diamond 
             // since we just split all the tetras in d.
             Diamond* cd = FindOrCreateDiamond(c);
             CheckSplit(cd, false);
@@ -78,15 +157,16 @@ void TetraHierarchy::SplitTetra(Tetra* t)
     t2->children[0] = t2->children[1] = nullptr;
     t2->parent = t;
     t->children[1] = t2;
-
     // Update the leaf list. 
     RemoveLeaf(t);
     AddLeaf(t1);
     AddLeaf(t2);
-
     // Add each child to its diamond.
     AddToDiamond(t1);
     AddToDiamond(t2);
+    // Add the tetrahedron outlines to the mesh.
+    AddOutline(t1);
+    AddOutline(t2);
 }
 
 void TetraHierarchy::AddToDiamond(Tetra* t) 
@@ -129,10 +209,15 @@ void TetraHierarchy::RemoveLeaf(Tetra* t)
 
 inline vertex_t TetraHierarchy::VertexMidpoint(const vertex_t& v1, const vertex_t& v2) 
 {
-    return { (v1.x+v2.x)/2, (v1.y+v2.y)/2, (v1.z+v2.z)/2 };    
+    // We should only have to compute integer vertices ;
+    // otherwise, the grid size is wrong.
+    assert((v1.x + v2.x) & 1 == 0);
+    assert((v1.y + v2.y) & 1 == 0);
+    assert((v1.z + v2.z) & 1 == 0);
+    return { (v1.x+v2.x) >> 1, (v1.y+v2.y) >> 1, (v1.z+v2.z) >> 1 };    
 }
 
-static uint64_t DistanceSquared(const vertex_t& a, const vertex_t& b)
+inline static uint64_t DistanceSquared(const vertex_t& a, const vertex_t& b)
 {
     uint64_t dx = a.x >= b.x ? (a.x - b.x) : (b.x - a.x);
     uint64_t dy = a.y >= b.y ? (a.y - b.y) : (b.y - a.y);
@@ -170,4 +255,17 @@ void TetraHierarchy::FindLongestEdge(
             maxLengthSquared = lengthSquared;
         }
     }
+}
+
+void TetraHierarchy::AddOutline(const Tetra* t) 
+{
+    glm::vec3 color { 0, 1, 1 };
+    uint32_t i0 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[0]), color);
+    uint32_t i1 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[1]), color);
+    uint32_t i2 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[2]), color);
+    uint32_t i3 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[3]), color);
+    m_outline->AddTriangle(i0, i1, i2);
+    m_outline->AddTriangle(i0, i1, i3);
+    m_outline->AddTriangle(i0, i2, i3);
+    m_outline->AddTriangle(i1, i2, i3);
 }

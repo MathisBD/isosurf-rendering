@@ -1,9 +1,62 @@
 #include "algorithms/diamond.h"
+#include "algorithms/tetra_hierarchy.h"
 
+
+template <typename T>
+static T min3(T a, T b, T c)
+{
+    if (a <= b) {
+        return a <= c ? a : c;
+    }
+    else {
+        return b <= c ? b : c;
+    }
+}
+
+Diamond::Diamond(const vertex_t& center_, uint32_t maxLevel_) 
+{
+    center = center_;
+    maxLevel = maxLevel_;
+
+    // Compute the diamond info.
+    scale = min3(TrailingZeros(center.x), TrailingZeros(center.y), TrailingZeros(center.z));
+    level = maxLevel - scale;
+    switch (CountOnBits(center, scale)) {
+    case 1: phase = 2; break;
+    case 2: phase = 1; break;
+    case 3: phase = 0; break;
+    default: assert(false);
+    }
+
+    switch (phase) {
+    case 0: maxTetraCount = 6; break;
+    case 1: 
+        switch (LimitCoordsCount(center)) {
+        case 0: maxTetraCount = 4; break;
+        case 1: maxTetraCount = 2; break;
+        default: assert(false);
+        }
+    case 2:
+        switch (LimitCoordsCount(center)) {
+        case 0: maxTetraCount = 8; break;
+        case 1: maxTetraCount = 4; break;
+        case 2: maxTetraCount = 2; break;
+        default: assert(false);
+        }
+    }
+    
+    InitChildren();
+    InitParents();
+}
 
 // See the README.md file for an explanation.
 void Diamond::InitChildren() 
 {
+    // No children for diamonds at max depth.
+    if (level == maxLevel && phase == 2) {
+        return;
+    }
+
     switch (phase) {
     case 0:
         AddChild({ 1 << scale, 0, 0 });
@@ -30,14 +83,15 @@ void Diamond::InitChildren()
         assert(children.size() <= 4);
         break;
     case 2:
-        AddChild({  (1 << scale),  (1 << scale),  (1 << scale) });
-        AddChild({  (1 << scale),  (1 << scale), -(1 << scale) });
-        AddChild({  (1 << scale), -(1 << scale),  (1 << scale) });
-        AddChild({  (1 << scale), -(1 << scale), -(1 << scale) });
-        AddChild({ -(1 << scale),  (1 << scale),  (1 << scale) });
-        AddChild({ -(1 << scale),  (1 << scale), -(1 << scale) });
-        AddChild({ -(1 << scale), -(1 << scale),  (1 << scale) });
-        AddChild({ -(1 << scale), -(1 << scale), -(1 << scale) });
+        assert(scale > 0);
+        AddChild({  (1 << (scale-1)),  (1 << (scale-1)),  (1 << (scale-1)) });
+        AddChild({  (1 << (scale-1)),  (1 << (scale-1)), -(1 << (scale-1)) });
+        AddChild({  (1 << (scale-1)), -(1 << (scale-1)),  (1 << (scale-1)) });
+        AddChild({  (1 << (scale-1)), -(1 << (scale-1)), -(1 << (scale-1)) });
+        AddChild({ -(1 << (scale-1)),  (1 << (scale-1)),  (1 << (scale-1)) });
+        AddChild({ -(1 << (scale-1)),  (1 << (scale-1)), -(1 << (scale-1)) });
+        AddChild({ -(1 << (scale-1)), -(1 << (scale-1)),  (1 << (scale-1)) });
+        AddChild({ -(1 << (scale-1)), -(1 << (scale-1)), -(1 << (scale-1)) });
         assert(children.size() <= 8);
         break;
     default: assert(false);
@@ -47,7 +101,10 @@ void Diamond::InitChildren()
 // See the README.md file for an explanation.
 void Diamond::InitParents() 
 {
-    assert(depth > 0);
+    // No parents for diamonds at 0 depth.
+    if (level == 0 && phase == 0) {
+        return;
+    }
 
     switch (phase) {
     case 0:
@@ -128,26 +185,47 @@ inline void Diamond::AddChild(const glm::i32vec3& ofs)
     }
 }
 
-inline uint32_t Diamond::CountOnBits(const vertex_t& v, uint32_t pos) 
+uint8_t Diamond::TrailingZeros(uint32_t x) const 
 {
-    uint32_t count = 0;
+    for (uint8_t count = 0; count < 32; count++) {
+        if (IsBitOn(x, count)) {
+            return count;
+        }
+    }
+    return 32;
+}
+
+inline uint8_t Diamond::CountOnBits(const vertex_t& v, uint8_t pos) const
+{
+    uint8_t count = 0;
     if (IsBitOn(v.x, pos)) { count++; }
     if (IsBitOn(v.y, pos)) { count++; }
     if (IsBitOn(v.z, pos)) { count++; }
     return count;
 }
 
-inline bool Diamond::IsBitOn(uint32_t x, uint32_t pos) 
+inline bool Diamond::IsBitOn(uint32_t x, uint32_t pos) const
 {
     return x & (1 << pos) ? true : false;  
 }
 
-inline bool Diamond::IsAdditionValid(const vertex_t& v, const glm::i32vec3 ofs) 
+inline bool Diamond::IsAdditionValid(const vertex_t& v, const glm::i32vec3 ofs) const
 {
     // All vertices should fit into a signed integer anyways,
     // so we can cast without taking any special care.
     glm::i32vec3 add = glm::i32vec3(v) + ofs;
-    return 0 <= add.x && add.x <= (int32_t)maxCoord &&
-           0 <= add.y && add.y <= (int32_t)maxCoord &&
-           0 <= add.z && add.z <= (int32_t)maxCoord;
+    int32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
+    return 0 <= add.x && add.x <= maxCoord &&
+           0 <= add.y && add.y <= maxCoord &&
+           0 <= add.z && add.z <= maxCoord;
+}
+
+uint8_t Diamond::LimitCoordsCount(const vertex_t& v) 
+{
+    uint8_t count;
+    uint32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
+    if (v.x == 0 || v.x == maxCoord) { count++; }
+    if (v.y == 0 || v.y == maxCoord) { count++; }
+    if (v.z == 0 || v.z == maxCoord) { count++; }
+    return count;
 }

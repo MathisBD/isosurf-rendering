@@ -3,7 +3,7 @@
 #include <vector>
 
 
-typedef glm::i32vec3 vertex_t;
+typedef glm::u32vec3 vertex_t;
 
 // The representation used for tetrahedrons and diamonds is a tradeoff
 // between rendering speed / hierarchy split-merge speed. 
