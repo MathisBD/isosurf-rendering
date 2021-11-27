@@ -1,11 +1,15 @@
 # isosurf-rendering
 
+# Building 
+
 Required libraries : openGL (mesa), glfw, glew, glm.
 
 To build the project (out of source) : go to /build, then 
-cmake ../ && make && ./test
-To build in release mode (i.e. with optimizations turned on),
-add the -DCMAKE_BUILD_TYPE=Release option to cmake.
+cmake -DCMAKE_BUILD_TYPE=mode .. && make && ./test
+CMake supports different build modes :
+    - Debug : no optimizations
+    - Release : optimizations but no debug symbols
+    - RelWithDebInfo : optimizations + debug symbols (useful for profiling)
 
 # Sources:
 

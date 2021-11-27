@@ -23,12 +23,14 @@ public:
     // The valid coordinates range from 0 to MaxCoord(maxLevel) incuded.
     inline static uint32_t MaxCoord(uint32_t maxLevel)
     {
-        return (1UL << maxLevel);
+        return (1U << (maxLevel+1));
     }
 private:
     // The valid depths range from 0 to 3*maxLevel+2 included.
     uint32_t m_maxLevel;
     CubeGrid m_grid;
+    
+    uint32_t m_checkID = 0;
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
     std::unordered_map<vertex_t, Diamond*> m_diamonds;
@@ -41,7 +43,8 @@ private:
     void CreateRootDiamond();
     Diamond* FindOrCreateDiamond(const vertex_t& center);
     bool ShouldSplit(const Diamond* d);
-    void CheckSplit(const Diamond* d, bool force);
+    void CheckSplit(Diamond* d, uint32_t checkID);
+    void ForceSplit(Diamond* d);
 
     // We should only split leaf tetrahedrons.
     // Remove t from the leaf list and add both its children.

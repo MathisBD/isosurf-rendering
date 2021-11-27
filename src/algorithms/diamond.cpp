@@ -13,10 +13,35 @@ static T min3(T a, T b, T c)
     }
 }
 
+void Diamond::Print() const
+{
+    printf("[+] DIAMOND\n");
+    printf("\tcenter=(%u,%u,%u)", 
+        center.x,
+        center.y,
+        center.z);
+
+    printf("\tlevel=%u", level);
+    printf("\tphase=%u", phase);
+    printf("\tscale=%u\n", scale);
+    
+    printf("\tchildren=");
+    for (const vertex_t& c : children) {
+        printf("(%u,%u,%u) ", c.x, c.y, c.z);
+    }
+    printf("\n\tparents=");
+    for (const vertex_t& p : parents) {
+        printf("(%u,%u,%u) ", p.x, p.y, p.z);
+    }
+    printf("\ntetraCount=%lu/%u\n", activeTetras.size(), maxTetraCount);
+}
+
 Diamond::Diamond(const vertex_t& center_, uint32_t maxLevel_) 
 {
     center = center_;
     maxLevel = maxLevel_;
+    isSplit = false;
+    lastCheck = 0;
 
     // Compute the diamond info.
     scale = min3(TrailingZeros(center.x), TrailingZeros(center.y), TrailingZeros(center.z));
@@ -31,18 +56,25 @@ Diamond::Diamond(const vertex_t& center_, uint32_t maxLevel_)
     switch (phase) {
     case 0: maxTetraCount = 6; break;
     case 1: 
+    { 
         switch (LimitCoordsCount(center)) {
         case 0: maxTetraCount = 4; break;
         case 1: maxTetraCount = 2; break;
         default: assert(false);
         }
+        break;
+    }
     case 2:
+    {
         switch (LimitCoordsCount(center)) {
         case 0: maxTetraCount = 8; break;
         case 1: maxTetraCount = 4; break;
         case 2: maxTetraCount = 2; break;
-        default: assert(false);
+        default: assert(false);  
         }
+        break;
+    }  
+    default: assert(false);
     }
     
     InitChildren();
@@ -206,7 +238,7 @@ inline uint8_t Diamond::CountOnBits(const vertex_t& v, uint8_t pos) const
 
 inline bool Diamond::IsBitOn(uint32_t x, uint32_t pos) const
 {
-    return x & (1 << pos) ? true : false;  
+    return (x & (1 << pos)) ? true : false;  
 }
 
 inline bool Diamond::IsAdditionValid(const vertex_t& v, const glm::i32vec3 ofs) const
@@ -222,7 +254,7 @@ inline bool Diamond::IsAdditionValid(const vertex_t& v, const glm::i32vec3 ofs) 
 
 uint8_t Diamond::LimitCoordsCount(const vertex_t& v) 
 {
-    uint8_t count;
+    uint8_t count = 0;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
     if (v.x == 0 || v.x == maxCoord) { count++; }
     if (v.y == 0 || v.y == maxCoord) { count++; }

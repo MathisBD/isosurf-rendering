@@ -5,7 +5,9 @@
 
 void TetraHierarchy::SplitAll() 
 {
-    CheckSplit(m_rootDiamond, false);    
+    m_checkID++;
+    CheckSplit(m_rootDiamond, m_checkID);    
+    printf("Total diamond count=%lu\n", m_diamonds.size());
 }
 
 const Tetra* TetraHierarchy::GetFirstLeafTetra() const 
@@ -19,10 +21,12 @@ const Mesh& TetraHierarchy::GetOutlineMesh() const
     return *m_outline;    
 }
 
+
 TetraHierarchy::TetraHierarchy(uint32_t maxLevel, const CubeGrid& grid) :
     m_grid(grid.dim, grid.lowVertex, grid.highVertex)
 {
     m_maxLevel = maxLevel;
+    m_checkID = 0;
 
     uint32_t maxCoord = MaxCoord(m_maxLevel);
     assert(m_grid.dim.x == maxCoord + 1);
@@ -80,6 +84,7 @@ void TetraHierarchy::CreateRootDiamond()
         t->parent = t->children[0] = t->children[1] = nullptr;
         AddLeaf(t);
         AddOutline(t);
+        AddToDiamond(t);
     }
 }
 
@@ -96,22 +101,17 @@ inline Diamond* TetraHierarchy::FindOrCreateDiamond(const vertex_t& center)
     }
 }
 
-void TetraHierarchy::CheckSplit(const Diamond* d, bool force) 
+void TetraHierarchy::ForceSplit(Diamond* d)
 {
-    if (!force && !ShouldSplit(d)) {
-        return;
-    }
-    if (d->level == m_maxLevel && d->phase == 2) {
-        return;
-    }
-
+    assert(d->level < m_maxLevel || d->phase < 2);
+    assert(!d->isSplit);
     // Ensure d is complete.
     for (const vertex_t& p : d->parents) {
         // It is okay to create a diamond pd
         // since we are going to add tetras to it anyways.
         Diamond* pd = FindOrCreateDiamond(p);
-        if (!pd->IsComplete()) {
-            CheckSplit(pd, true);
+        if (!pd->isSplit) {
+            ForceSplit(pd);
         }
     }    
     assert(d->IsComplete());
@@ -121,14 +121,47 @@ void TetraHierarchy::CheckSplit(const Diamond* d, bool force)
     for (Tetra* t : d->activeTetras) {
         SplitTetra(t);
     }
+    d->isSplit = true;
+}
+
+void TetraHierarchy::CheckSplit(Diamond* d, uint32_t checkID) 
+{
+    assert(d->lastCheck < checkID);
+    if (!ShouldSplit(d)) {
+        return;
+    }
+    if (d->level == m_maxLevel && d->phase == 2) {
+        return;
+    }
+
+    if (!d->isSplit) {
+        // Ensure d is complete.
+        for (const vertex_t& p : d->parents) {
+            // It is okay to create a diamond pd
+            // since we are going to add tetras to it anyways.
+            Diamond* pd = FindOrCreateDiamond(p);
+            if (!pd->isSplit) {
+                ForceSplit(pd);
+            }
+        }    
+        assert(d->IsComplete());
+
+        // Actually split the diamond.
+        // After this the diamond structure should still be sound.
+        for (Tetra* t : d->activeTetras) {
+            SplitTetra(t);
+        }
+        d->isSplit = true;
+    }    
+    d->lastCheck = checkID;
 
     // Recurse on children.
-    if (!force) {
-        for (const vertex_t& c : d->children) {
-            // This should not create a new diamond 
-            // since we just split all the tetras in d.
-            Diamond* cd = FindOrCreateDiamond(c);
-            CheckSplit(cd, false);
+    for (const vertex_t& c : d->children) {
+        // This should not create a new diamond 
+        // since we just split all the tetras in d.
+        Diamond* cd = FindOrCreateDiamond(c);
+        if (cd->lastCheck < checkID) {
+            CheckSplit(cd, checkID);
         }
     }
 }
@@ -211,9 +244,9 @@ inline vertex_t TetraHierarchy::VertexMidpoint(const vertex_t& v1, const vertex_
 {
     // We should only have to compute integer vertices ;
     // otherwise, the grid size is wrong.
-    assert((v1.x + v2.x) & 1 == 0);
-    assert((v1.y + v2.y) & 1 == 0);
-    assert((v1.z + v2.z) & 1 == 0);
+    assert(((v1.x + v2.x) & 1) == 0);
+    assert(((v1.y + v2.y) & 1) == 0);
+    assert(((v1.z + v2.z) & 1) == 0);
     return { (v1.x+v2.x) >> 1, (v1.y+v2.y) >> 1, (v1.z+v2.z) >> 1 };    
 }
 

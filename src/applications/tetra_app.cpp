@@ -18,14 +18,19 @@ TetraApp::TetraApp()
     m_camera = new Camera({0, 0, 5.0f}, 10.0f, 1000.0f);
 
     // Create the tetra hierarchy.
-    uint32_t maxLevel = 1;
+    uint32_t maxLevel = 4;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
     CubeGrid grid = CubeGrid(
         {maxCoord+1, maxCoord+1, maxCoord+1},
         {0, 0, 0},
-        {5, 5, 5});
+        {10, 10, 10});
     m_hierarchy = new TetraHierarchy(maxLevel, grid);
+    auto start = std::chrono::high_resolution_clock::now();
     m_hierarchy->SplitAll();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    printf("Time to split the hierarchy : %ldms\n", time.count());
+   
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
 }
 

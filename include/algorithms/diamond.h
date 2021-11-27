@@ -20,18 +20,21 @@ public:
     uint8_t scale;
     // The maximum level allowed in the tetra hierarchy.
     uint32_t maxLevel;
-    
     std::vector<vertex_t> children;
     std::vector<vertex_t> parents;
-    
     // The maximum tetrahedron count for a diamond
     // depends on its phase and if it is on the border of the grid.
     uint32_t maxTetraCount;
     std::vector<Tetra*> activeTetras;
-
+    // A diamond is split if it is complete and 
+    // all its tetras are split.
+    bool isSplit;
+    // The last time we checked to split this diamond.
+    uint32_t lastCheck;
 
     Diamond(const vertex_t& center_, uint32_t maxLevel_);
 
+    void Print() const;
     inline bool IsComplete() const
     {
         return activeTetras.size() >= maxTetraCount;

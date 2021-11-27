@@ -23,14 +23,17 @@ public:
     const VertexArray& GetVertexArray() const;
     const IndexBuffer& GetIndexBuffer() const;
 private:
-    uint32_t m_vertexCount;
     // this is the buffer that will go in to the VertexBuffer
-    std::vector<float> m_buffer;
+    // vertexCount and vertexCapacity are actually 6 times 
+    // the number of vertices, they count the number of floats.
+    size_t m_vertexCount;
+    size_t m_vertexCapacity;
+    float* m_vertices;
     // the list of indices
-    std::vector<IndexBuffer::index_t> m_indices;
+    size_t m_indexCount;
+    size_t m_indexCapacity;
+    uint32_t* m_indices;
     
-    // these are built only when Build() is called
-    bool m_builtMesh;
     VertexArray* m_va;
     IndexBuffer* m_ib;
     VertexBuffer* m_vb;
