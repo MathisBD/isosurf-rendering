@@ -13,10 +13,13 @@
 class TetraHierarchy
 {
 public:
-    TetraHierarchy(uint32_t maxLevel, const CubeGrid& grid);
+    TetraHierarchy(uint32_t maxLevel, const CubeGrid& grid);    
     ~TetraHierarchy();
-
-    void SplitAll();
+    
+    // The split factor (range ]0, 1[) controls how much we split.
+    // Values around 0.5 are reasonable. The higher the value, the more we split
+    // diamonds close to the view origin and the less we split further away.
+    void SplitAll(const glm::vec3& viewOrigin, float splitFactor);
     const Tetra* GetFirstLeafTetra() const;
     const Mesh& GetOutlineMesh() const;
     
@@ -29,7 +32,9 @@ private:
     // The valid depths range from 0 to 3*maxLevel+2 included.
     uint32_t m_maxLevel;
     CubeGrid m_grid;
-    
+    glm::vec3 m_viewOrigin;
+    float m_splitFactor;
+
     uint32_t m_checkID = 0;
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
@@ -52,6 +57,7 @@ private:
     // compute the middle of the child's longest edge).
     void SplitTetra(Tetra* t);
     void AddToDiamond(Tetra* t);
+    void ComputeMesh(Tetra* t);
     void AddLeaf(Tetra* t);
     void RemoveLeaf(Tetra* t);
     vertex_t VertexMidpoint(const vertex_t& v1, const vertex_t& v2);

@@ -8,7 +8,7 @@ inline uint32_t MCChunk::Index3D(uint32_t x, uint32_t y, uint32_t z)
     return x + m_dim.x * y + m_dim.x * m_dim.y * z; 
 }
 
-MCChunk::MCChunk(const CubeGrid& grid, float (*density)(glm::vec3 position)) :
+MCChunk::MCChunk(const HexaGrid& grid, float (*density)(glm::vec3 position)) :
     m_dim(grid.dim), m_density(density)
 {
     m_mesh = new Mesh();
@@ -30,7 +30,7 @@ const Mesh& MCChunk::GetMesh()
     return *m_mesh;
 }
 
-void MCChunk::LabelVertices(const CubeGrid& grid) 
+void MCChunk::LabelVertices(const HexaGrid& grid) 
 {
     m_vertices = new MCVertex[m_dim.x*m_dim.y*m_dim.z];
 

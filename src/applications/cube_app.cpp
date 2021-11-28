@@ -12,9 +12,6 @@
 
 static float Circle(glm::vec3 pos)
 {
-    if (pos.z < 0) {
-        return -1;
-    }
     return 5 - glm::length(pos);
 }
 
@@ -25,15 +22,23 @@ CubeApp::CubeApp()
     m_camera = new Camera({0, 0, 5.0f}, 10.0f, 1000.0f);
 
     // Create the marching cubes chunk.
-    const auto& grid = CubeGrid(
-        {128, 128, 128},
-        {-10, -10, -10},
-        {10, 10, 10});
+    glm::vec3 corners[8];
+    corners[0b000] = {  0.0f,  0.0f,  0.0f };
+    corners[0b001] = {  0.0f,  0.0f, 10.0f };
+    corners[0b010] = {  0.0f, 10.0f,  0.0f };
+    corners[0b011] = {  0.0f, 10.0f, 10.0f };
+    corners[0b100] = { 10.0f,  0.0f,  0.0f };
+    corners[0b101] = { 10.0f,  0.0f, 10.0f };
+    corners[0b110] = { 10.0f, 10.0f,  0.0f };
+    corners[0b111] = { 10.0f, 10.0f, 10.0f };
+    const auto& grid = HexaGrid(128, corners);
+
     auto start = std::chrono::high_resolution_clock::now();
     m_mcChunk = new MCChunk(grid, Circle);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     printf("Time to run marching cubes : %ldms\n", time.count());
+    
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
 }
 

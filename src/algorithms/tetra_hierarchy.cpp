@@ -3,8 +3,10 @@
 
 
 
-void TetraHierarchy::SplitAll() 
+void TetraHierarchy::SplitAll(const glm::vec3& viewOrigin, float splitFactor) 
 {
+    m_viewOrigin = viewOrigin;
+    m_splitFactor = splitFactor;
     m_checkID++;
     CheckSplit(m_rootDiamond, m_checkID);    
     printf("Total diamond count=%lu\n", m_diamonds.size());
@@ -23,15 +25,13 @@ const Mesh& TetraHierarchy::GetOutlineMesh() const
 
 
 TetraHierarchy::TetraHierarchy(uint32_t maxLevel, const CubeGrid& grid) :
-    m_grid(grid.dim, grid.lowVertex, grid.highVertex)
+    m_grid(grid.dim, grid.lowVertex, grid.worldSize)
 {
     m_maxLevel = maxLevel;
     m_checkID = 0;
 
     uint32_t maxCoord = MaxCoord(m_maxLevel);
-    assert(m_grid.dim.x == maxCoord + 1);
-    assert(m_grid.dim.y == maxCoord + 1);
-    assert(m_grid.dim.z == maxCoord + 1);
+    assert(m_grid.dim == maxCoord + 1);
 
     m_outline = new Mesh();
 
@@ -46,7 +46,26 @@ TetraHierarchy::~TetraHierarchy()
 
 bool TetraHierarchy::ShouldSplit(const Diamond* d) 
 {
-    return true;
+    // Calculate the diamond's bounding sphere radius.
+    float radius = m_grid.cellSize * (1U << (d->scale+1));
+    switch (d->phase) {
+    case 0: radius *= glm::sqrt(3); break;
+    case 1: radius *= glm::sqrt(2); break;
+    case 2: break;
+    default: assert(false);
+    }
+    // Calculate the distance from the diamond's bounding sphere
+    // to the view origin.
+    float distance = glm::distance(m_viewOrigin, m_grid.WorldPosition(d->center));
+    distance = glm::max(distance - radius, 0.1f);
+
+    float maxDistance = glm::sqrt(3) * m_grid.worldSize;
+    assert(distance < maxDistance);
+
+    assert(0.0f < m_splitFactor && m_splitFactor < 1.0f);
+    float goalLevel = glm::log(distance / maxDistance) / glm::log(m_splitFactor);
+    
+    return (float)(d->level) < goalLevel;
 }
 
 void TetraHierarchy::CreateRootDiamond()
@@ -211,6 +230,11 @@ void TetraHierarchy::AddToDiamond(Tetra* t)
     d->activeTetras.push_back(t);
 }
 
+void TetraHierarchy::ComputeMesh(Tetra* t) 
+{
+        
+}
+
 void TetraHierarchy::AddLeaf(Tetra* t) 
 {
     if (!m_firstLeafTetra) {
@@ -250,6 +274,8 @@ inline vertex_t TetraHierarchy::VertexMidpoint(const vertex_t& v1, const vertex_
     return { (v1.x+v2.x) >> 1, (v1.y+v2.y) >> 1, (v1.z+v2.z) >> 1 };    
 }
 
+// TODO : store the edge distances (not squared? -> if all integer) 
+// directly in the tetrahedrons, to avoid calculating them all the time.
 inline static uint64_t DistanceSquared(const vertex_t& a, const vertex_t& b)
 {
     uint64_t dx = a.x >= b.x ? (a.x - b.x) : (b.x - a.x);

@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "rendering/mesh.h"
-#include "algorithms/cube_grid.h"
+#include "algorithms/hexa_grid.h"
 
 typedef struct 
 {
@@ -32,7 +32,7 @@ class MCChunk
 public:
     // dim is the number of vertices along each dimension.
     // There are dim-1 cells along each dimension.
-    MCChunk(const CubeGrid& grid, float (*density)(glm::vec3 position));
+    MCChunk(const HexaGrid& grid, float (*density)(glm::vec3 position));
     ~MCChunk();
 
     const Mesh& GetMesh();
@@ -58,7 +58,7 @@ private:
 
     inline uint32_t Index3D(uint32_t x, uint32_t y, uint32_t z);
     
-    void LabelVertices(const CubeGrid& grid);
+    void LabelVertices(const HexaGrid& grid);
     void LabelEdges();
     void CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction);
     

@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
+#include "rendering/mesh.h"
 
 
 typedef glm::u32vec3 vertex_t;
@@ -17,9 +18,14 @@ typedef glm::u32vec3 vertex_t;
 typedef struct _Tetra
 {
     vertex_t vertices[4];
+
     struct _Tetra* children[2];
     struct _Tetra* parent;
+    
     // leaf tetrahedrons are stored in a linked-list
     struct _Tetra* nextLeaf;
     struct _Tetra* prevLeaf;
+
+    // The mesh associated with each vertex hexahedron.
+    Mesh* hexaMesh[4];
 } Tetra;
