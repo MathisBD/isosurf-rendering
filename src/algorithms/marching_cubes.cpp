@@ -8,26 +8,27 @@ inline uint32_t MCChunk::Index3D(uint32_t x, uint32_t y, uint32_t z)
     return x + m_dim.x * y + m_dim.x * m_dim.y * z; 
 }
 
-MCChunk::MCChunk(const HexaGrid& grid, float (*density)(glm::vec3 position)) :
-    m_dim(grid.dim), m_density(density)
+MCChunk::MCChunk(
+    const HexaGrid& grid, 
+    float (*density)(glm::vec3 position),
+    Mesh* mesh) :
+    m_dim(grid.dim), m_density(density), m_mesh(mesh)
 {
-    m_mesh = new Mesh();
     LabelVertices(grid);
-    LabelEdges();
-    Triangulate();
-    m_mesh->Build();
 }
 
 MCChunk::~MCChunk() 
 {
-    delete m_mesh;
+    // Do NOT delete the mesh : we don't own it.
     delete m_vertices;
     delete m_edges;  
 }
 
-const Mesh& MCChunk::GetMesh() 
-{
-    return *m_mesh;
+void MCChunk::Compute() 
+{    
+    LabelEdges();
+    Triangulate();
+    m_mesh->Build();
 }
 
 void MCChunk::LabelVertices(const HexaGrid& grid) 

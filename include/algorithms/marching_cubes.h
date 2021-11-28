@@ -32,10 +32,12 @@ class MCChunk
 public:
     // dim is the number of vertices along each dimension.
     // There are dim-1 cells along each dimension.
-    MCChunk(const HexaGrid& grid, float (*density)(glm::vec3 position));
+    MCChunk(
+        const HexaGrid& grid, 
+        float (*density)(glm::vec3 pos),
+        Mesh* mesh);
+    void Compute();
     ~MCChunk();
-
-    const Mesh& GetMesh();
 private:
     // Controls how many iterations to perform when
     // binary searching for the crossing position 

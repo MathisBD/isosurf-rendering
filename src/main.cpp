@@ -4,7 +4,7 @@
 
 int main()
 {
-    auto app = CubeApp();
+    auto app = TetraApp();
     app.MainLoop();
     return 0;
 }

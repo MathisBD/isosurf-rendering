@@ -1,5 +1,7 @@
 #include "algorithms/tetra_hierarchy.h"
 #include <assert.h>
+#include "algorithms/hexa_grid.h"
+#include "algorithms/marching_cubes.h"
 
 
 
@@ -24,17 +26,21 @@ const Mesh& TetraHierarchy::GetOutlineMesh() const
 }
 
 
-TetraHierarchy::TetraHierarchy(uint32_t maxLevel, const CubeGrid& grid) :
-    m_grid(grid.dim, grid.lowVertex, grid.worldSize)
+TetraHierarchy::TetraHierarchy(
+    const CubeGrid& grid,
+    float (*density)(glm::vec3 pos),
+    uint32_t maxLevel, 
+    uint32_t mcChunkDim) :
+    m_grid(grid.dim, grid.lowVertex, grid.worldSize),
+    m_density(density),
+    m_maxLevel(maxLevel),
+    m_mcChunkDim(mcChunkDim),
+    m_checkID(0)
 {
-    m_maxLevel = maxLevel;
-    m_checkID = 0;
-
     uint32_t maxCoord = MaxCoord(m_maxLevel);
     assert(m_grid.dim == maxCoord + 1);
 
     m_outline = new Mesh();
-
     CreateRootDiamond();
 }
 
@@ -102,8 +108,9 @@ void TetraHierarchy::CreateRootDiamond()
         t->vertices[3] = cube_verts[tetraEdges[i][1]];
         t->parent = t->children[0] = t->children[1] = nullptr;
         AddLeaf(t);
-        AddOutline(t);
         AddToDiamond(t);
+        AddOutline(t);
+        ComputeMesh(t);
     }
 }
 
@@ -219,6 +226,9 @@ void TetraHierarchy::SplitTetra(Tetra* t)
     // Add the tetrahedron outlines to the mesh.
     AddOutline(t1);
     AddOutline(t2);
+    // Compute the meshes
+    ComputeMesh(t1);
+    ComputeMesh(t2);
 }
 
 void TetraHierarchy::AddToDiamond(Tetra* t) 
@@ -232,7 +242,41 @@ void TetraHierarchy::AddToDiamond(Tetra* t)
 
 void TetraHierarchy::ComputeMesh(Tetra* t) 
 {
-        
+    // The first index is the corner we are processing,
+    // then the other three vertices.
+    uint8_t hexas[][4] = 
+    {
+        { 0,    1, 2, 3 },
+        { 1,    0, 2, 3 },
+        { 2,    1, 0, 3 },
+        { 3,    1, 2, 0 },
+    };
+
+    assert(!t->mesh);
+    t->mesh = new Mesh();
+    for (uint8_t i = 0; i < 4; i++) {
+        const uint8_t* h = hexas[i]; 
+        // Compute the mesh for the hexahedron located at corner h[0].
+        glm::vec3 v0 = m_grid.WorldPosition(t->vertices[h[0]]);
+        glm::vec3 v1 = m_grid.WorldPosition(t->vertices[h[1]]);
+        glm::vec3 v2 = m_grid.WorldPosition(t->vertices[h[2]]);
+        glm::vec3 v3 = m_grid.WorldPosition(t->vertices[h[3]]);
+
+        glm::vec3 corners[8];
+        corners[0b000] = v0;
+        corners[0b100] = (v0 + v1) / 2.0f;
+        corners[0b010] = (v0 + v2) / 2.0f;
+        corners[0b001] = (v0 + v3) / 2.0f;
+        corners[0b110] = (v0 + v1 + v2) / 3.0f;
+        corners[0b011] = (v0 + v2 + v3) / 3.0f;
+        corners[0b101] = (v0 + v1 + v3) / 3.0f;
+        corners[0b111] = (v0 + v1 + v2 + v3) / 4.0f;
+
+        HexaGrid grid = HexaGrid(m_mcChunkDim, corners);
+        MCChunk mc = MCChunk(grid, m_density, t->mesh);
+        mc.Compute();
+    }
+    t->mesh->Build();
 }
 
 void TetraHierarchy::AddLeaf(Tetra* t) 

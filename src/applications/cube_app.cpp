@@ -20,6 +20,7 @@ CubeApp::CubeApp()
 {
     m_shader = new Shader("../shaders/Basic.shader");
     m_camera = new Camera({0, 0, 5.0f}, 10.0f, 1000.0f);
+    m_mesh = new Mesh();
 
     // Create the marching cubes chunk.
     glm::vec3 corners[8];
@@ -34,11 +35,13 @@ CubeApp::CubeApp()
     const auto& grid = HexaGrid(128, corners);
 
     auto start = std::chrono::high_resolution_clock::now();
-    m_mcChunk = new MCChunk(grid, Circle);
+    m_mcChunk = new MCChunk(grid, Circle, m_mesh);
+    m_mcChunk->Compute();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     printf("Time to run marching cubes : %ldms\n", time.count());
     
+    m_mesh->Build();
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
 }
 
@@ -120,7 +123,6 @@ void CubeApp::Render()
         1000.0f);
     m_shader->Bind();
     m_shader->SetUniformMat4f("u_MVP", proj);
-    const Mesh& mesh = m_mcChunk->GetMesh(); 
 
     // mesh
     //GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
@@ -130,5 +132,5 @@ void CubeApp::Render()
     // wireframe
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
     m_shader->SetUniform3f("u_color", 1, 0, 1);
-    m_renderer->Draw(mesh.GetVertexArray(), mesh.GetIndexBuffer(), *m_shader);
+    m_renderer->Draw(m_mesh->GetVertexArray(), m_mesh->GetIndexBuffer(), *m_shader);
 }

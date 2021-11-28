@@ -17,15 +17,15 @@ typedef glm::u32vec3 vertex_t;
 // for rendering.
 typedef struct _Tetra
 {
+public:
     vertex_t vertices[4];
 
-    struct _Tetra* children[2];
-    struct _Tetra* parent;
+    struct _Tetra* children[2] { nullptr, nullptr };
+    struct _Tetra* parent = nullptr;
     
     // leaf tetrahedrons are stored in a linked-list
-    struct _Tetra* nextLeaf;
-    struct _Tetra* prevLeaf;
+    struct _Tetra* nextLeaf = nullptr;
+    struct _Tetra* prevLeaf = nullptr;
 
-    // The mesh associated with each vertex hexahedron.
-    Mesh* hexaMesh[4];
+    Mesh* mesh = nullptr;
 } Tetra;

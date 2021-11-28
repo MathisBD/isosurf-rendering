@@ -11,6 +11,10 @@
 #include <stdio.h>
 
 
+static float Circle(glm::vec3 pos)
+{
+    return 100.0f - glm::distance(pos, {0, 0, -100});
+}
 
 TetraApp::TetraApp()
 {
@@ -19,12 +23,14 @@ TetraApp::TetraApp()
 
     // Create the tetra hierarchy.
     uint32_t maxLevel = 15;
+    uint32_t mcChunkDim = 4;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
     CubeGrid grid = CubeGrid(
         maxCoord+1,
         {0.0f, 0.0f, -100.0f},
         100.0f);
-    m_hierarchy = new TetraHierarchy(maxLevel, grid);
+    m_hierarchy = new TetraHierarchy(grid, Circle, maxLevel, mcChunkDim);
+
     auto start = std::chrono::high_resolution_clock::now();
     m_hierarchy->SplitAll({0, 0, 0}, 0.5);
     auto end = std::chrono::high_resolution_clock::now();
@@ -120,6 +126,14 @@ void TetraApp::Render()
     
     // wireframe
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
+    
     m_shader->SetUniform3f("u_color", 1, 0, 1);
     m_renderer->Draw(mesh.GetVertexArray(), mesh.GetIndexBuffer(), *m_shader);
+    
+    m_shader->SetUniform3f("u_color", 1, 1, 0);
+    const Tetra* leaf = m_hierarchy->GetFirstLeafTetra();
+    while (leaf) {
+        m_renderer->Draw(leaf->mesh->GetVertexArray(), leaf->mesh->GetIndexBuffer(), *m_shader);
+        leaf = leaf->nextLeaf;
+    }
 }
