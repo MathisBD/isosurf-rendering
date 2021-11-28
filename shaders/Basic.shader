@@ -2,29 +2,38 @@
 #version 430 core
 
 // model view projection matrix    
-uniform mat4 u_MVP;
-uniform vec3 u_color;
+uniform mat4 u_camera;
 
 in vec3 vertPosition;
-in vec3 vertColor;
+in vec3 vertNormal;
 
-out vec3 fragColor;
+out vec3 fragPosition;
+out vec3 fragNormal;
 
 void main()
 {
-    //fragColor = vertColor;
-    fragColor = u_color;
-    gl_Position = u_MVP * vec4(vertPosition, 1.0);
+    fragPosition = vertPosition;
+    fragNormal = vertNormal;
+    gl_Position = u_camera * vec4(vertPosition, 1.0);
 }
 
 
 #shader fragment
 #version 430 core
 
-in vec3 fragColor;
+uniform vec3 u_color;
+uniform vec3 u_lightDirection;
+
+in vec3 fragPosition;
+in vec3 fragNormal;
+
 out vec4 outColor;
 
 void main()
 {
-    outColor = vec4(fragColor, 1.0);
+    vec3 normal = normalize(fragNormal);
+    vec3 light = normalize(u_lightDirection);
+    float diffuse = max(dot(normal, -light), 0);
+
+    outColor = vec4(u_color, 1.0) * diffuse;
 }

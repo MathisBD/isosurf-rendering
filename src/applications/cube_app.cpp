@@ -122,15 +122,16 @@ void CubeApp::Render()
         0.1f,
         1000.0f);
     m_shader->Bind();
-    m_shader->SetUniformMat4f("u_MVP", proj);
+    m_shader->SetUniformMat4f("u_camera", proj);
 
     // mesh
-    //GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
-    //m_shader->SetUniform3f("u_color", 0.8, 0.8, 0);
-    //m_renderer->Draw(mesh.GetVertexArray(), mesh.GetIndexBuffer(), *m_shader);
+    GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
+    m_shader->SetUniform3f("u_color", 0.8, 0.8, 0);
+    m_shader->SetUniform3f("u_lightDirection", 1.0, -1.0, 0.0);
+    m_renderer->Draw(m_mesh->GetVertexArray(), m_mesh->GetIndexBuffer(), *m_shader);
     
     // wireframe
-    GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
-    m_shader->SetUniform3f("u_color", 1, 0, 1);
-    m_renderer->Draw(m_mesh->GetVertexArray(), m_mesh->GetIndexBuffer(), *m_shader);
+    //GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
+    //m_shader->SetUniform3f("u_color", 1, 0, 1);
+    //m_renderer->Draw(m_mesh->GetVertexArray(), m_mesh->GetIndexBuffer(), *m_shader);
 }

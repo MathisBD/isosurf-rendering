@@ -15,7 +15,7 @@ public:
     ~Mesh();
     
     // Returns the index of the added vertex.
-    uint32_t AddVertex(const glm::vec3& position, const glm::vec3& color);
+    uint32_t AddVertex(const glm::vec3& position, const glm::vec3& normal);
     void AddTriangle(uint32_t i1, uint32_t i2, uint32_t i3);
     
     void Build();

@@ -77,8 +77,9 @@ void MCChunk::CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction)
     // does the edge have a crossing ?
     edge.hasCrossing = (m_vertices[v1].insideShape != m_vertices[v2].insideShape);
 
-    // if yes, calculate the crossing position
+    // if yes, calculate the isovertex data
     if (edge.hasCrossing) {
+        // Position
         glm::vec3 start = m_vertices[v1].position;
         glm::vec3 end = m_vertices[v2].position;
         // binary search
@@ -93,8 +94,19 @@ void MCChunk::CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction)
                 end = middle;
             }
         }
-        glm::vec3 isoVertexPos = (start + end) / 2.0f;
-        edge.isoVertexIdx = m_mesh->AddVertex(isoVertexPos, {1, 0, 0});
+        glm::vec3 pos = (start + end) / 2.0f;
+        
+        // Normal
+        float dx = 0.001f;
+        // this may be a little off from zero : we have to
+        // take it into account to compute the correct normal.
+        float isoDens = m_density(pos);
+        glm::vec3 normal = {
+            (m_density(pos + glm::vec3(dx, 0, 0)) - isoDens) / dx,
+            (m_density(pos + glm::vec3(0, dx, 0)) - isoDens) / dx,
+            (m_density(pos + glm::vec3(0, 0, dx)) - isoDens) / dx,
+        };
+        edge.isoVertexIdx = m_mesh->AddVertex(pos, normal);
     }
 }
 
