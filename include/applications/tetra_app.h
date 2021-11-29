@@ -5,11 +5,15 @@
 #include "rendering/shader.h"
 #include "algorithms/marching_cubes.h"
 #include "algorithms/tetra_hierarchy.h"
+#include "third_party/open_simplex_noise/noise.h"
+
 
 
 class TetraApp : public Application
 {
 public:
+    inline const static OpenSimplexNoise::Noise s_noise = {42};
+
     TetraApp();
     ~TetraApp();
 protected:

@@ -37,7 +37,7 @@ void main()
     vec3 light = normalize(u_lightDirection);
     float diffuse = max(dot(normal, -light), 0);
     
-    float ambient = 0.2;
+    float ambient = 0.4;
 
     outColor = vec4(u_color, 1.0) * (ambient + diffuse);
 }

@@ -16,6 +16,14 @@ static float Circle(glm::vec3 pos)
     return 100.0f - glm::distance(pos, {0, 0, -100});
 }
 
+static float Noise(glm::vec3 pos)
+{
+    float step = 1.0f - glm::smoothstep(80.0f, 100.0f, glm::length(pos));
+    pos /= 50;
+    float x = TetraApp::s_noise.eval(pos.x, pos.y, pos.z);
+    return ((x + 1.0f) * step) - 1.0f;
+}
+
 TetraApp::TetraApp()
 {
     m_defaultShader = new Shader("../shaders/Default.shader");
@@ -28,13 +36,13 @@ TetraApp::TetraApp()
 
     // Create the tetra hierarchy.
     uint32_t maxLevel = 10;
-    uint32_t mcChunkDim = 4;
+    uint32_t mcChunkDim = 16;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
     CubeGrid grid = CubeGrid(
         maxCoord+1,
         {0.0f, 0.0f, -100.0f},
         100.0f);
-    m_hierarchy = new TetraHierarchy(grid, Circle, maxLevel, mcChunkDim);
+    m_hierarchy = new TetraHierarchy(grid, Noise, maxLevel, mcChunkDim);
 
     auto start = std::chrono::high_resolution_clock::now();
     m_hierarchy->SplitAll({0, 0, 0}, 0.5);
