@@ -17,11 +17,16 @@ public:
     void Move(const glm::vec3& direction);
     void RotateHorizontal(float x);
     void RotateVertical(float y);
-    glm::mat4x4 ProjectionMatrix(float FOVdev, float aspectRatio, float clipNear, float clipFar);
+    void UpdateMatrix(float FOVdev, float aspectRatio, float clipNear, float clipFar);
+    const glm::mat4& WorldToViewMatrix();
+    const glm::mat4& ViewToScreenMatrix(); 
 private:
     glm::vec3 m_position;
     glm::vec3 m_forward;
     glm::vec3 m_up;
+
+    glm::mat4 m_worldToView;
+    glm::mat4 m_viewToScreen;
 
     float m_moveSpeed;
     float m_rotateSpeed;

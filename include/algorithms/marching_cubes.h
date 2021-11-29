@@ -42,7 +42,7 @@ private:
     // Controls how many iterations to perform when
     // binary searching for the crossing position 
     // on an edge.
-    const static uint32_t BIN_SEARCH_ITERATIONS = 5;
+    const static uint32_t BIN_SEARCH_ITERATIONS = 10;
 
     glm::u32vec3 m_dim;
     float (*m_density)(glm::vec3 position);

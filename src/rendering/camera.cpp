@@ -1,4 +1,4 @@
-#include "camera.h"
+#include "rendering/camera.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/vector_angle.hpp>
@@ -48,13 +48,22 @@ void Camera::RotateVertical(float y)
     }  
 }
 
-glm::mat4x4 Camera::ProjectionMatrix(float FOVdeg, float aspectRatio, float clipNear, float clipFar) 
+void Camera::UpdateMatrix(float FOVdeg, float aspectRatio, float clipNear, float clipFar) 
 {
     assert(FOVdeg > 0.0f);
     assert(aspectRatio > 0.0f);
     assert(clipNear > 0.0f);
 
-    glm::mat4 view = glm::lookAt(m_position, m_position + m_forward, m_up);  
-    glm::mat4 proj = glm::perspective(glm::radians(FOVdeg), aspectRatio, clipNear, clipFar);
-    return proj * view; 
+    m_worldToView = glm::lookAt(m_position, m_position + m_forward, m_up);  
+    m_viewToScreen = glm::perspective(glm::radians(FOVdeg), aspectRatio, clipNear, clipFar);
+}
+
+const glm::mat4& Camera::ViewToScreenMatrix() 
+{
+    return m_viewToScreen;    
+}
+
+const glm::mat4& Camera::WorldToViewMatrix() 
+{
+    return m_worldToView;    
 }

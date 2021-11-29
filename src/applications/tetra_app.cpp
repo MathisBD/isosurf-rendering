@@ -18,11 +18,16 @@ static float Circle(glm::vec3 pos)
 
 TetraApp::TetraApp()
 {
-    m_shader = new Shader("../shaders/Basic.shader");
+    m_defaultShader = new Shader("../shaders/Default.shader");
+    m_wireframeShader = new Shader("../shaders/Wireframe.shader");
+
     m_camera = new Camera({0, 0, 15.0f}, 50.0f, 1000.0f);
+    m_drawOutline = false;
+    m_outlineColor = {0.9, 0.3, 0.3};
+    m_meshColor = {1, 1, 0};
 
     // Create the tetra hierarchy.
-    uint32_t maxLevel = 15;
+    uint32_t maxLevel = 10;
     uint32_t mcChunkDim = 4;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
     CubeGrid grid = CubeGrid(
@@ -43,7 +48,8 @@ TetraApp::TetraApp()
 TetraApp::~TetraApp() 
 {
     delete m_camera;
-    delete m_shader;
+    delete m_defaultShader;
+    delete m_wireframeShader;
     delete m_hierarchy;
 }
 
@@ -70,14 +76,14 @@ void TetraApp::Update()
     }
 
     // rotate camera
-    if (m_inputMgr->m_leftMouse == KeyState::PRESSED) {
+    if (m_inputMgr->m_rightMouse == KeyState::PRESSED) {
         if (!m_rotateCamera) {
             m_inputMgr->DisableCursor();
             m_prevCursorPos = m_inputMgr->CursorPosition();
         }
         m_rotateCamera = true;
     }
-    if (m_inputMgr->m_leftMouse == KeyState::RELEASED) {
+    if (m_inputMgr->m_rightMouse == KeyState::RELEASED) {
         if (m_rotateCamera) {
             m_inputMgr->ShowCursor();
         }
@@ -89,48 +95,71 @@ void TetraApp::Update()
         m_camera->RotateVertical(-(cursorPos.y - m_prevCursorPos.y));
         m_prevCursorPos = cursorPos;
     }
+
+    m_camera->UpdateMatrix(
+        45.0f, 
+        WINDOW_PIXEL_WIDTH / (float)WINDOW_PIXEL_HEIGHT,
+        0.1f,
+        1000.0f); 
 }
 
-void TetraApp::Render()
+void TetraApp::DrawImGui() 
 {
-    // ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     {
         ImGui::Begin("Application info"); 
         ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); 
-        
-        glm::vec2 cursorPos = m_inputMgr->CursorPosition();
-        ImGui::Text("Cursor position : (%.2f, %.2f)", cursorPos.x, cursorPos.y);
+        ImGui::ColorEdit3("Mesh color", (float*)&m_meshColor);
+        ImGui::Checkbox("Draw outline", &m_drawOutline);
+        if (m_drawOutline) {
+            ImGui::ColorEdit3("Outline color", (float*)&m_outlineColor);
+        }
 
         ImGui::End();
     }
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());   
+}
 
-    // Renderer frame
-    glm::mat4 proj = m_camera->ProjectionMatrix(
-        45.0f, 
-        WINDOW_PIXEL_WIDTH / (float)WINDOW_PIXEL_HEIGHT,
-        0.1f,
-        1000.0f);
-    m_shader->Bind();
-    m_shader->SetUniformMat4f("u_camera", proj);
-    m_shader->SetUniform3f("u_lightDirection", 1.0f, 0.0f, 0.0f);
-    const Mesh& mesh = m_hierarchy->GetOutlineMesh();
+void TetraApp::DrawOutline()
+{
+    m_wireframeShader->Bind();
+    m_wireframeShader->SetUniformMat4f("u_worldToView", m_camera->WorldToViewMatrix());
+    m_wireframeShader->SetUniformMat4f("u_viewToScreen", m_camera->ViewToScreenMatrix()); 
+    
+    const Mesh& outline = m_hierarchy->GetOutlineMesh();
    
     // wireframe outline
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
-    m_shader->SetUniform3f("u_color", 1, 0, 1);
-    m_renderer->Draw(mesh.GetVertexArray(), mesh.GetIndexBuffer(), *m_shader);
-    
-    // actual mesh
+    const glm::vec3& c = m_outlineColor;
+    m_wireframeShader->SetUniform3f("u_color", c.x, c.y, c.z); 
+    m_renderer->Draw(outline.GetVertexArray(), outline.GetIndexBuffer(), *m_wireframeShader);
+}
+
+void TetraApp::DrawMesh() 
+{
+    m_defaultShader->Bind();
+    m_defaultShader->SetUniformMat4f("u_worldToView", m_camera->WorldToViewMatrix());
+    m_defaultShader->SetUniformMat4f("u_viewToScreen", m_camera->ViewToScreenMatrix()); 
+    m_defaultShader->SetUniform3f("u_lightDirection", -1, -1, 0);
+    const glm::vec3& c = m_meshColor;
+    m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
-    m_shader->SetUniform3f("u_color", 1, 1, 0);
+    
     const Tetra* leaf = m_hierarchy->GetFirstLeafTetra();
     while (leaf) {
-        m_renderer->Draw(leaf->mesh->GetVertexArray(), leaf->mesh->GetIndexBuffer(), *m_shader);
+        m_renderer->Draw(leaf->mesh->GetVertexArray(), leaf->mesh->GetIndexBuffer(), *m_defaultShader);
         leaf = leaf->nextLeaf;
     }
+}
+
+void TetraApp::Render()
+{
+    if (m_drawOutline) {
+        DrawOutline();
+    }
+    DrawMesh();
+    DrawImGui();
 }

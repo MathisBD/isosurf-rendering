@@ -116,14 +116,15 @@ void CubeApp::Render()
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // Renderer frame
-    glm::mat4 proj = m_camera->ProjectionMatrix(
+    m_camera->UpdateMatrix(
         45.0f, 
         WINDOW_PIXEL_WIDTH / (float)WINDOW_PIXEL_HEIGHT,
         0.1f,
         1000.0f);
     m_shader->Bind();
-    m_shader->SetUniformMat4f("u_camera", proj);
-
+    m_shader->SetUniformMat4f("u_worldToView", m_camera->WorldToViewMatrix());
+    m_shader->SetUniformMat4f("u_viewToScreen", m_camera->ViewToScreenMatrix());
+    
     // mesh
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
     m_shader->SetUniform3f("u_color", 0.8, 0.8, 0);

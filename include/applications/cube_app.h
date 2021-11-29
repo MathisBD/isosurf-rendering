@@ -1,7 +1,7 @@
 #pragma once
 #include "applications/application.h"
 #include "rendering/mesh.h"
-#include "camera.h"
+#include "rendering/camera.h"
 #include "rendering/shader.h"
 #include "algorithms/marching_cubes.h"
 
