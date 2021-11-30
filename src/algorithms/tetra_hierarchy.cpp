@@ -2,16 +2,24 @@
 #include <assert.h>
 #include "algorithms/hexa_grid.h"
 #include "algorithms/marching_cubes.h"
+#include <stdio.h>
 
 
 
-void TetraHierarchy::SplitAll(const glm::vec3& viewOrigin, float splitFactor) 
+void TetraHierarchy::SplitAll(const glm::vec3& viewOrigin, float maxTime) 
 {
     m_viewOrigin = viewOrigin;
-    m_splitFactor = splitFactor;
     m_checkID++;
-    CheckSplit(m_rootDiamond, m_checkID);    
-    printf("Total diamond count=%lu\n", m_diamonds.size());
+
+    while (!m_splitQueue.empty()) {
+        Diamond* d = m_splitQueue.front();
+        m_splitQueue.pop_front();
+
+        assert(d->lastCheck <= m_checkID);
+        if (d->lastCheck < m_checkID) {
+            CheckSplit(d);
+        }
+    }   
 }
 
 const Tetra* TetraHierarchy::GetFirstLeafTetra() const 
@@ -29,15 +37,13 @@ const Mesh& TetraHierarchy::GetOutlineMesh() const
 TetraHierarchy::TetraHierarchy(
     const CubeGrid& grid,
     float (*density)(glm::vec3 pos),
-    uint32_t maxLevel, 
-    uint32_t mcChunkDim) :
+    const Parameters& params) :
     m_grid(grid.dim, grid.lowVertex, grid.worldSize),
     m_density(density),
-    m_maxLevel(maxLevel),
-    m_mcChunkDim(mcChunkDim),
+    m_params(params),
     m_checkID(0)
 {
-    uint32_t maxCoord = MaxCoord(m_maxLevel);
+    uint32_t maxCoord = MaxCoord(m_params.maxLevel);
     assert(m_grid.dim == maxCoord + 1);
 
     m_outline = new Mesh();
@@ -68,8 +74,8 @@ bool TetraHierarchy::ShouldSplit(const Diamond* d)
     float maxDistance = glm::sqrt(3) * m_grid.worldSize;
     assert(distance < maxDistance);
 
-    assert(0.0f < m_splitFactor && m_splitFactor < 1.0f);
-    float goalLevel = glm::log(distance / maxDistance) / glm::log(m_splitFactor);
+    assert(0.0f < m_params.splitFactor && m_params.splitFactor < 1.0f);
+    float goalLevel = glm::log(distance / maxDistance) / glm::log(m_params.splitFactor);
     
     return (float)(d->level) < goalLevel;
 }
@@ -77,8 +83,9 @@ bool TetraHierarchy::ShouldSplit(const Diamond* d)
 void TetraHierarchy::CreateRootDiamond()
 {
     // Create the root diamond
-    uint32_t maxCoord = MaxCoord(m_maxLevel);
+    uint32_t maxCoord = MaxCoord(m_params.maxLevel);
     m_rootDiamond = FindOrCreateDiamond({ maxCoord>>1, maxCoord>>1, maxCoord>>1 });
+    m_splitQueue.push_front(m_rootDiamond);
     // Create its 6 tetrahedra.
     const vertex_t cube_verts[8] = {
         { 0,        0,        0        },
@@ -106,7 +113,6 @@ void TetraHierarchy::CreateRootDiamond()
         t->vertices[1] = cube_verts[splitEdge[1]];
         t->vertices[2] = cube_verts[tetraEdges[i][0]];
         t->vertices[3] = cube_verts[tetraEdges[i][1]];
-        t->parent = t->children[0] = t->children[1] = nullptr;
         AddLeaf(t);
         AddToDiamond(t);
         AddOutline(t);
@@ -118,7 +124,7 @@ inline Diamond* TetraHierarchy::FindOrCreateDiamond(const vertex_t& center)
 {
     auto it = m_diamonds.find(center);
     if (it == m_diamonds.end()) {
-        Diamond* d = new Diamond(center, m_maxLevel);
+        Diamond* d = new Diamond(center, m_params.maxLevel);
         m_diamonds.insert({center, d});
         return d;
     }
@@ -129,7 +135,7 @@ inline Diamond* TetraHierarchy::FindOrCreateDiamond(const vertex_t& center)
 
 void TetraHierarchy::ForceSplit(Diamond* d)
 {
-    assert(d->level < m_maxLevel || d->phase < 2);
+    assert(d->level < m_params.maxLevel || d->phase < 2);
     assert(!d->isSplit);
     // Ensure d is complete.
     for (const vertex_t& p : d->parents) {
@@ -150,13 +156,13 @@ void TetraHierarchy::ForceSplit(Diamond* d)
     d->isSplit = true;
 }
 
-void TetraHierarchy::CheckSplit(Diamond* d, uint32_t checkID) 
+void TetraHierarchy::CheckSplit(Diamond* d) 
 {
-    assert(d->lastCheck < checkID);
+    assert(d->lastCheck < m_checkID);
     if (!ShouldSplit(d)) {
         return;
     }
-    if (d->level == m_maxLevel && d->phase == 2) {
+    if (d->level == m_params.maxLevel && d->phase == 2) {
         return;
     }
 
@@ -179,18 +185,20 @@ void TetraHierarchy::CheckSplit(Diamond* d, uint32_t checkID)
         }
         d->isSplit = true;
     }    
-    d->lastCheck = checkID;
+    d->lastCheck = m_checkID;
 
     // Recurse on children.
     for (const vertex_t& c : d->children) {
         // This should not create a new diamond 
         // since we just split all the tetras in d.
         Diamond* cd = FindOrCreateDiamond(c);
-        if (cd->lastCheck < checkID) {
-            CheckSplit(cd, checkID);
+        if (cd->lastCheck < m_checkID) {
+            m_splitQueue.push_back(cd);
         }
     }
 }
+
+
 
 void TetraHierarchy::SplitTetra(Tetra* t) 
 {
@@ -199,36 +207,31 @@ void TetraHierarchy::SplitTetra(Tetra* t)
     FindLongestEdge(t, &le1, &le2, &i1, &i2);
     const vertex_t* v = t->vertices;
 
-    Tetra* t1 = new Tetra();
+    Tetra* t0 = new Tetra(t, 0);
+    t0->vertices[0] = v[i1];
+    t0->vertices[1] = v[i2];
+    t0->vertices[2] = VertexMidpoint(v[le1], v[le2]);
+    t0->vertices[3] = v[le1];
+    
+    Tetra* t1 = new Tetra(t, 1);
     t1->vertices[0] = v[i1];
     t1->vertices[1] = v[i2];
     t1->vertices[2] = VertexMidpoint(v[le1], v[le2]);
-    t1->vertices[3] = v[le1];
-    t1->children[0] = t1->children[1] = nullptr;
-    t1->parent = t;
-    t->children[0] = t1;
+    t1->vertices[3] = v[le2];
     
-    Tetra* t2 = new Tetra();
-    t2->vertices[0] = v[i1];
-    t2->vertices[1] = v[i2];
-    t2->vertices[2] = VertexMidpoint(v[le1], v[le2]);
-    t2->vertices[3] = v[le2];
-    t2->children[0] = t2->children[1] = nullptr;
-    t2->parent = t;
-    t->children[1] = t2;
-    // Update the leaf list. 
+     // Update the leaf list. 
     RemoveLeaf(t);
+    AddLeaf(t0);
     AddLeaf(t1);
-    AddLeaf(t2);
     // Add each child to its diamond.
+    AddToDiamond(t0);
     AddToDiamond(t1);
-    AddToDiamond(t2);
     // Add the tetrahedron outlines to the mesh.
+    AddOutline(t0);
     AddOutline(t1);
-    AddOutline(t2);
     // Compute the meshes
+    ComputeMesh(t0);
     ComputeMesh(t1);
-    ComputeMesh(t2);
 }
 
 void TetraHierarchy::AddToDiamond(Tetra* t) 
@@ -272,7 +275,7 @@ void TetraHierarchy::ComputeMesh(Tetra* t)
         corners[0b101] = (v0 + v1 + v3) / 3.0f;
         corners[0b111] = (v0 + v1 + v2 + v3) / 4.0f;
 
-        HexaGrid grid = HexaGrid(m_mcChunkDim, corners);
+        HexaGrid grid = HexaGrid(m_params.mcChunkDim, corners);
         MCChunk mc = MCChunk(grid, m_density, t->mesh);
         mc.Compute();
     }

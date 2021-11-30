@@ -18,10 +18,11 @@ static float Circle(glm::vec3 pos)
 
 static float Noise(glm::vec3 pos)
 {
-    float step = 1.0f - glm::smoothstep(80.0f, 100.0f, glm::length(pos));
+    //float step = 1.0f - glm::smoothstep(80.0f, 100.0f, glm::length(pos));
     pos /= 50;
     float x = TetraApp::s_noise.eval(pos.x, pos.y, pos.z);
-    return ((x + 1.0f) * step) - 1.0f;
+    //return ((x + 1.0f) * step) - 1.0f;
+    return x;
 }
 
 TetraApp::TetraApp()
@@ -32,20 +33,23 @@ TetraApp::TetraApp()
     m_camera = new Camera({0, 0, 15.0f}, 50.0f, 1000.0f);
     m_drawOutline = false;
     m_outlineColor = {0.9, 0.3, 0.3};
-    m_meshColor = {1, 1, 0};
+    m_shallowMeshColor = {1, 1, 0};
+    m_deepMeshColor = {1, 0, 1};
 
     // Create the tetra hierarchy.
-    uint32_t maxLevel = 10;
-    uint32_t mcChunkDim = 16;
-    uint32_t maxCoord = TetraHierarchy::MaxCoord(maxLevel);
+    TetraHierarchy::Parameters params;
+    params.maxLevel = 10;
+    params.mcChunkDim = 4;
+    params.splitFactor = 0.5f;
+    uint32_t maxCoord = TetraHierarchy::MaxCoord(params.maxLevel);
     CubeGrid grid = CubeGrid(
         maxCoord+1,
         {0.0f, 0.0f, -100.0f},
         100.0f);
-    m_hierarchy = new TetraHierarchy(grid, Noise, maxLevel, mcChunkDim);
+    m_hierarchy = new TetraHierarchy(grid, Noise, params);
 
     auto start = std::chrono::high_resolution_clock::now();
-    m_hierarchy->SplitAll({0, 0, 0}, 0.5);
+    m_hierarchy->SplitAll({0, 0, 0}, 1.0f);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     printf("Time to split the hierarchy : %ldms\n", time.count());
@@ -119,7 +123,9 @@ void TetraApp::DrawImGui()
     {
         ImGui::Begin("Application info"); 
         ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); 
-        ImGui::ColorEdit3("Mesh color", (float*)&m_meshColor);
+ 
+        ImGui::ColorEdit3("Mesh shallow color", (float*)&m_shallowMeshColor);
+        ImGui::ColorEdit3("Mesh deep color", (float*)&m_deepMeshColor);
         ImGui::Checkbox("Draw outline", &m_drawOutline);
         if (m_drawOutline) {
             ImGui::ColorEdit3("Outline color", (float*)&m_outlineColor);
@@ -151,13 +157,18 @@ void TetraApp::DrawMesh()
     m_defaultShader->Bind();
     m_defaultShader->SetUniformMat4f("u_worldToView", m_camera->WorldToViewMatrix());
     m_defaultShader->SetUniformMat4f("u_viewToScreen", m_camera->ViewToScreenMatrix()); 
-    m_defaultShader->SetUniform3f("u_lightDirection", -1, -1, 0);
-    const glm::vec3& c = m_meshColor;
-    m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);
+    m_defaultShader->SetUniform3f("u_lightDirection", -1, 0, -1);
+    
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
     
     const Tetra* leaf = m_hierarchy->GetFirstLeafTetra();
     while (leaf) {
+        // Blend between the shallow and deep colors.
+        float alpha = leaf->depth / (float)m_hierarchy->GetMaxDepth();
+        assert(0 <= alpha && alpha <= 1);
+        const glm::vec3& c = m_shallowMeshColor * (1 - alpha) + m_deepMeshColor * alpha;
+        m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);
+    
         m_renderer->Draw(leaf->mesh->GetVertexArray(), leaf->mesh->GetIndexBuffer(), *m_defaultShader);
         leaf = leaf->nextLeaf;
     }

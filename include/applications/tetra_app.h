@@ -21,7 +21,7 @@ protected:
     Shader* m_defaultShader = nullptr;
     Shader* m_wireframeShader = nullptr;
     TetraHierarchy* m_hierarchy = nullptr;
-
+    
     // camera rotation
     bool m_rotateCamera = false;
     glm::vec2 m_prevCursorPos;
@@ -29,8 +29,9 @@ protected:
     // user controled parameters
     bool m_drawOutline;
     glm::vec3 m_outlineColor;
-    glm::vec3 m_meshColor;
-    
+    glm::vec3 m_deepMeshColor;
+    glm::vec3 m_shallowMeshColor;
+
     void Update() override;
     void Render() override;
 

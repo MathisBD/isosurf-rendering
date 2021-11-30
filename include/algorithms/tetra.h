@@ -15,17 +15,42 @@ typedef glm::u32vec3 vertex_t;
 // decode all other diamond/tetra info from the centers). This way I can have
 // all the leaf tetra in a linked list, which should be very easy to traverse
 // for rendering.
-typedef struct _Tetra
+class Tetra
 {
 public:
+    uint32_t depth;
     vertex_t vertices[4];
 
-    struct _Tetra* children[2] { nullptr, nullptr };
-    struct _Tetra* parent = nullptr;
+    Tetra* children[2];
+    Tetra* parent;
     
-    // leaf tetrahedrons are stored in a linked-list
-    struct _Tetra* nextLeaf = nullptr;
-    struct _Tetra* prevLeaf = nullptr;
+    Tetra* nextLeaf;
+    Tetra* prevLeaf;
 
-    Mesh* mesh = nullptr;
-} Tetra;
+    Mesh* mesh;
+
+    // Root tetrahedron.
+    Tetra()
+    {
+        depth = 0;
+        children[0] = children[1] = nullptr;
+        parent = nullptr;
+        nextLeaf = prevLeaf = nullptr;
+        mesh = nullptr;
+    };
+
+    Tetra(Tetra* p, uint8_t childIdx) 
+    {
+        depth = p->depth + 1;
+        children[0] = children[1] = nullptr;
+        parent = p;
+        nextLeaf = prevLeaf = nullptr;
+        p->children[childIdx] = this;
+        mesh = nullptr;
+    };
+
+    ~Tetra()
+    {
+        delete mesh;
+    };
+};
