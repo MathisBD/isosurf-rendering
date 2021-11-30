@@ -64,28 +64,29 @@ private:
 
     // Split/Merge
     uint32_t m_checkID = 0;
-    std::queue<Diamond*> m_splitQueue = {};
-    //std::list<Diamond*> m_mergeQueue;
+    std::queue<Diamond*> m_splitQueue;
+    std::queue<Diamond*> m_mergeQueue;
 
 
     void CreateRootDiamond();
     Diamond* FindOrCreateDiamond(const vertex_t& center);
     
     void RebuildSMQueues();
-    bool ShouldSplit(const Diamond* d);
-    void CheckSplit(Diamond* d);
     void ForceSplit(Diamond* d);
-    //bool ShouldMerge(const Diamond* d);
-    //void CheckMerge(Diamond* d, uint32_t checkID);
+    void ForceMerge(Diamond* d);
+    
+    float GoalLevel(const Diamond* d);
+    bool ShouldMerge(const Diamond* d);
+    bool ShouldSplit(const Diamond* d);
     
     // We should only split leaf tetrahedrons.
     // Remove t from the leaf list and add both its children.
     // Add the children to their respective diamond (to find it,
     // compute the middle of the child's longest edge).
     void SplitTetra(Tetra* t);
-    //void MergeTetra(Tetra* t);
+    void MergeTetra(Tetra* t);
     void AddToDiamond(Tetra* t);
-    //void RemoveFromDiamond(Tetra* t);
+    void RemoveFromDiamond(Tetra* t);
     void ComputeMesh(Tetra* t);
     vertex_t VertexMidpoint(const vertex_t& v1, const vertex_t& v2);
     // Compute the indices (le1, le2) of the vertices

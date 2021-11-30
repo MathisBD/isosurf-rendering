@@ -58,12 +58,17 @@ void Camera::UpdateMatrix(float FOVdeg, float aspectRatio, float clipNear, float
     m_viewToScreen = glm::perspective(glm::radians(FOVdeg), aspectRatio, clipNear, clipFar);
 }
 
-const glm::mat4& Camera::ViewToScreenMatrix() 
+const glm::vec3 Camera::WorldPosition() const 
+{
+    return m_position;    
+}
+
+const glm::mat4& Camera::ViewToScreenMatrix() const
 {
     return m_viewToScreen;    
 }
 
-const glm::mat4& Camera::WorldToViewMatrix() 
+const glm::mat4& Camera::WorldToViewMatrix() const
 {
     return m_worldToView;    
 }

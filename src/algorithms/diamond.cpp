@@ -135,7 +135,7 @@ void Diamond::InitChildren()
 // See the README.md file for an explanation.
 void Diamond::InitParents() 
 {
-    // No parents for diamonds at 0 depth.
+    // No parents for the diamond at 0 depth.
     if (level == 0 && phase == 0) {
         return;
     }

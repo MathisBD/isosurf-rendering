@@ -18,8 +18,11 @@ public:
     void RotateHorizontal(float x);
     void RotateVertical(float y);
     void UpdateMatrix(float FOVdev, float aspectRatio, float clipNear, float clipFar);
-    const glm::mat4& WorldToViewMatrix();
-    const glm::mat4& ViewToScreenMatrix(); 
+    
+    const glm::vec3 WorldPosition() const;
+    const glm::mat4& WorldToViewMatrix() const;
+    const glm::mat4& ViewToScreenMatrix() const; 
+
 private:
     glm::vec3 m_position;
     glm::vec3 m_forward;

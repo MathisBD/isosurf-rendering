@@ -39,9 +39,23 @@ public:
 
     inline uint32_t Depth() const { return 3*((uint32_t)level) + 2; }
     void Print() const;
+    
     inline bool IsComplete() const
     {
         return activeTetras.size() >= maxTetraCount;
+    }
+
+    inline bool IsLeaf() const 
+    {
+        if (nextLeaf || prevLeaf) {
+            assert(!isSplit);
+            return true;
+        }
+        else {
+            assert(IsComplete());
+            assert(isSplit);
+            return false;
+        }
     }
 private:
     void InitChildren();

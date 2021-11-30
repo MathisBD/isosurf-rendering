@@ -48,12 +48,6 @@ TetraApp::TetraApp()
         100.0f);
     m_hierarchy = new TetraHierarchy(grid, Noise, params);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    //m_hierarchy->SplitMerge({0, 0, 0}, 300);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    printf("Time to split the hierarchy : %ldms\n", time.count());
-   
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
 }
 
@@ -114,7 +108,7 @@ void TetraApp::Update()
         0.1f,
         1000.0f); 
 
-    m_hierarchy->SplitMerge({0, 0, 0}, 15);
+    m_hierarchy->SplitMerge(m_camera->WorldPosition(), 15);
 }
 
 void TetraApp::DrawImGui() 
