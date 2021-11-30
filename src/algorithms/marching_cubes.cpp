@@ -95,18 +95,7 @@ void MCChunk::CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction)
             }
         }
         glm::vec3 pos = (start + end) / 2.0f;
-        
-        // Normal
-        float dx = 0.001f;
-        // this may be a little off from zero : we have to
-        // take it into account to compute the correct normal.
-        float isoDens = m_density(pos);
-        glm::vec3 normal = {
-            (m_density(pos + glm::vec3(dx, 0, 0)) - isoDens) / dx,
-            (m_density(pos + glm::vec3(0, dx, 0)) - isoDens) / dx,
-            (m_density(pos + glm::vec3(0, 0, dx)) - isoDens) / dx,
-        };
-        edge.isoVertexIdx = m_mesh->AddVertex(pos, normal);
+        edge.isoVertexIdx = m_mesh->AddVertex(pos);
     }
 }
 

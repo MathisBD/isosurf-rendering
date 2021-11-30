@@ -145,13 +145,11 @@ void TetraApp::DrawOutline()
     m_wireframeShader->SetUniformMat4f("u_worldToView", m_camera->WorldToViewMatrix());
     m_wireframeShader->SetUniformMat4f("u_viewToScreen", m_camera->ViewToScreenMatrix()); 
     
-    const Mesh& outline = m_hierarchy->GetOutlineMesh();
-   
     // wireframe outline
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
     const glm::vec3& c = m_outlineColor;
     m_wireframeShader->SetUniform3f("u_color", c.x, c.y, c.z); 
-    m_renderer->Draw(outline.GetVertexArray(), outline.GetIndexBuffer(), *m_wireframeShader);
+    m_renderer->Draw(m_hierarchy->GetOutlineMesh(), *m_wireframeShader);
 }
 
 void TetraApp::DrawMesh() 
@@ -172,7 +170,7 @@ void TetraApp::DrawMesh()
         m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);
     
         for (const Tetra* t : leaf->activeTetras) {
-            m_renderer->Draw(t->mesh->GetVertexArray(), t->mesh->GetIndexBuffer(), *m_defaultShader);
+            m_renderer->Draw(*(t->mesh), *m_defaultShader);
         }
         leaf = leaf->nextLeaf;
     }

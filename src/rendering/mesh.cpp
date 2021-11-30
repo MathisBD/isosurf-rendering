@@ -31,19 +31,18 @@ inline void Mesh::LayoutVector(const glm::vec3& v)
 }
 
 
-uint32_t Mesh::AddVertex(const glm::vec3& position, const glm::vec3& normal) 
+uint32_t Mesh::AddVertex(const glm::vec3& position) 
 {
     // make some space for the vertex
-    if (m_vertexCount + 6 > m_vertexCapacity) {
-        // since the initial capacity is greater than 6,
+    if (m_vertexCount + 3 > m_vertexCapacity) {
+        // since the initial capacity is greater than 3,
         // we can just double the capacity.
         m_vertexCapacity *= 2;
         m_vertices = (float*)realloc(m_vertices, m_vertexCapacity * sizeof(float));
     }
     LayoutVector(position);
-    LayoutVector(normal);
     // return the index of the vertex we added.
-    return (m_vertexCount / 6) - 1;
+    return (m_vertexCount / 3) - 1;
 }
 
 void Mesh::AddTriangle(uint32_t i1, uint32_t i2, uint32_t i3) 
@@ -64,7 +63,6 @@ void Mesh::Build()
 {
     VertexBufferLayout layout;
     layout.Push<float>(3); // vertex position
-    layout.Push<float>(3); // vertex normal
 
     if (m_ib) { delete m_ib; }
     m_ib = new IndexBuffer(m_indices, m_indexCount);

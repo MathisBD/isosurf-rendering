@@ -129,7 +129,7 @@ void CubeApp::Render()
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
     m_shader->SetUniform3f("u_color", 0.8, 0.8, 0);
     m_shader->SetUniform3f("u_lightDirection", 1.0, -1.0, 0.0);
-    m_renderer->Draw(m_mesh->GetVertexArray(), m_mesh->GetIndexBuffer(), *m_shader);
+    m_renderer->Draw(*m_mesh, *m_shader);
     
     // wireframe
     //GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));

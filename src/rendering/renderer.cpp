@@ -22,8 +22,11 @@ void Renderer::SetBackgroundColor(const glm::vec4& color)
     GLCall(glClearColor(color.r, color.g, color.b, color.a))  ;  
 }
 
-void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const 
+void Renderer::Draw(const Mesh& mesh, const Shader& shader) const 
 {
+    const VertexArray& va = mesh.GetVertexArray();
+    const IndexBuffer& ib = mesh.GetIndexBuffer();
+
     shader.Bind();
     va.Bind();
     ib.Bind();

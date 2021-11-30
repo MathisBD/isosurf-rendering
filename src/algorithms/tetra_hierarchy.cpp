@@ -369,11 +369,10 @@ void TetraHierarchy::FindLongestEdge(
 
 void TetraHierarchy::AddOutline(const Tetra* t) 
 {
-    glm::vec3 color { 0, 1, 1 };
-    uint32_t i0 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[0]), color);
-    uint32_t i1 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[1]), color);
-    uint32_t i2 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[2]), color);
-    uint32_t i3 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[3]), color);
+    uint32_t i0 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[0]));
+    uint32_t i1 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[1]));
+    uint32_t i2 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[2]));
+    uint32_t i3 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[3]));
     m_outline->AddTriangle(i0, i1, i2);
     m_outline->AddTriangle(i0, i1, i3);
     m_outline->AddTriangle(i0, i2, i3);
