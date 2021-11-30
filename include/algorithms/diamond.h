@@ -8,7 +8,7 @@
 typedef glm::u32vec3 vertex_t;
 
 
-struct Diamond
+class Diamond
 {
 public:
     // All the info can be retrieved from only the center position.
@@ -19,12 +19,12 @@ public:
     uint8_t level;
     uint8_t scale;
     // The maximum level allowed in the tetra hierarchy.
-    uint32_t maxLevel;
+    uint8_t maxLevel;
     std::vector<vertex_t> children;
     std::vector<vertex_t> parents;
     // The maximum tetrahedron count for a diamond
     // depends on its phase and if it is on the border of the grid.
-    uint32_t maxTetraCount;
+    uint8_t maxTetraCount;
     std::vector<Tetra*> activeTetras;
     // A diamond is split if it is complete and 
     // all its tetras are split.
@@ -32,8 +32,12 @@ public:
     // The last time we checked to split this diamond.
     uint32_t lastCheck;
 
-    Diamond(const vertex_t& center_, uint32_t maxLevel_);
+    Diamond* nextLeaf = nullptr;
+    Diamond* prevLeaf = nullptr;
 
+    Diamond(const vertex_t& center_, uint8_t maxLevel_);
+
+    inline uint32_t Depth() const { return 3*((uint32_t)level) + 2; }
     void Print() const;
     inline bool IsComplete() const
     {
@@ -49,7 +53,7 @@ private:
 
     uint8_t TrailingZeros(uint32_t x) const;    
     uint8_t CountOnBits(const vertex_t& v, uint8_t pos) const;
-    bool IsBitOn(uint32_t x, uint32_t pos) const;
+    bool IsBitOn(uint32_t x, uint8_t pos) const;
     bool IsAdditionValid(const vertex_t& v, const glm::i32vec3 ofs) const;
     // Count the number of coordinates of v that are
     // equal to zero or to MaxCoord();

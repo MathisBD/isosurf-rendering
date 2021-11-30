@@ -36,12 +36,14 @@ void Diamond::Print() const
     printf("\ntetraCount=%lu/%u\n", activeTetras.size(), maxTetraCount);
 }
 
-Diamond::Diamond(const vertex_t& center_, uint32_t maxLevel_) 
+Diamond::Diamond(const vertex_t& center_, uint8_t maxLevel_) 
 {
     center = center_;
     maxLevel = maxLevel_;
     isSplit = false;
     lastCheck = 0;
+    nextLeaf = nullptr;
+    prevLeaf = nullptr;
 
     // Compute the diamond info.
     scale = min3(TrailingZeros(center.x), TrailingZeros(center.y), TrailingZeros(center.z));
@@ -236,7 +238,7 @@ inline uint8_t Diamond::CountOnBits(const vertex_t& v, uint8_t pos) const
     return count;
 }
 
-inline bool Diamond::IsBitOn(uint32_t x, uint32_t pos) const
+inline bool Diamond::IsBitOn(uint32_t x, uint8_t pos) const
 {
     return (x & (1 << pos)) ? true : false;  
 }

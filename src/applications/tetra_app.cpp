@@ -49,7 +49,7 @@ TetraApp::TetraApp()
     m_hierarchy = new TetraHierarchy(grid, Noise, params);
 
     auto start = std::chrono::high_resolution_clock::now();
-    m_hierarchy->SplitAll({0, 0, 0}, 1.0f);
+    //m_hierarchy->SplitMerge({0, 0, 0}, 300);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::milliseconds time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     printf("Time to split the hierarchy : %ldms\n", time.count());
@@ -113,6 +113,8 @@ void TetraApp::Update()
         WINDOW_PIXEL_WIDTH / (float)WINDOW_PIXEL_HEIGHT,
         0.1f,
         1000.0f); 
+
+    m_hierarchy->SplitMerge({0, 0, 0}, 15);
 }
 
 void TetraApp::DrawImGui() 
@@ -161,15 +163,17 @@ void TetraApp::DrawMesh()
     
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
     
-    const Tetra* leaf = m_hierarchy->GetFirstLeafTetra();
+    const Diamond* leaf = m_hierarchy->GetFirstLeafDiamond();
     while (leaf) {
         // Blend between the shallow and deep colors.
-        float alpha = leaf->depth / (float)m_hierarchy->GetMaxDepth();
+        float alpha = leaf->Depth() / (float)m_hierarchy->GetMaxDepth();
         assert(0 <= alpha && alpha <= 1);
         const glm::vec3& c = m_shallowMeshColor * (1 - alpha) + m_deepMeshColor * alpha;
         m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);
     
-        m_renderer->Draw(leaf->mesh->GetVertexArray(), leaf->mesh->GetIndexBuffer(), *m_defaultShader);
+        for (const Tetra* t : leaf->activeTetras) {
+            m_renderer->Draw(t->mesh->GetVertexArray(), t->mesh->GetIndexBuffer(), *m_defaultShader);
+        }
         leaf = leaf->nextLeaf;
     }
 }
