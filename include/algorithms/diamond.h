@@ -28,6 +28,7 @@ public:
     std::vector<Tetra*> activeTetras;
     // A diamond is split if it is complete and 
     // all its tetras are split.
+    // In particular : split implies complete.
     bool isSplit;
 
     // A diamond can be in the split or merge queue.

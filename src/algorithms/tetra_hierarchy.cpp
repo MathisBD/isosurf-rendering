@@ -6,17 +6,17 @@
 #include <chrono>
 
 
-static uint64_t MillisecondsSince(const std::chrono::high_resolution_clock::time_point& start) 
+uint64_t MillisecondsSince(const std::chrono::high_resolution_clock::time_point& start) 
 {
-    auto curr = std::chrono::high_resolution_clock::now();\
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(curr - start);\
+    auto curr = std::chrono::high_resolution_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(curr - start);
     return ms.count();    
 }
 
 void TetraHierarchy::SplitMerge(const glm::vec3& viewOrigin, uint32_t maxTimeMilliseconds) 
 {
     // The view position changed : we have to check everything again.
-    if (glm::distance(viewOrigin, m_viewOrigin) > 0.001f) {
+    if (glm::distance(viewOrigin, m_viewOrigin) > 0.00001f) {
         m_viewOrigin = viewOrigin;
         m_splitQueue.SetCurrentToFirst();
         m_mergeQueue.SetCurrentToFirst();
@@ -24,15 +24,18 @@ void TetraHierarchy::SplitMerge(const glm::vec3& viewOrigin, uint32_t maxTimeMil
     // Merge
     auto start = std::chrono::high_resolution_clock::now();
     Diamond* d;
-    /*while (d = m_mergeQueue.GetCurrent()) {
+    while (d = m_mergeQueue.GetCurrent()) {
         m_mergeQueue.AdvanceCurrent();
-        if (MillisecondsSince(start) > maxTimeMilliseconds) {
+        auto curr = std::chrono::high_resolution_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(curr - start);
+        int64_t time = ms.count();
+        if (time > (int64_t)maxTimeMilliseconds) {
             return;
         }
         if (ShouldMerge(d) && d->isSplit) {
             Merge(d);
         }
-    }*/ 
+    } 
     // Split
     while (d = m_splitQueue.GetCurrent()) {
         m_splitQueue.AdvanceCurrent();
@@ -79,14 +82,6 @@ float TetraHierarchy::GoalLevel(const Diamond* d)
     case 2: break;
     default: assert(false);
     }
-    for (const Tetra* t : d->activeTetras) {
-        uint8_t le1, le2, i1, i2;
-        FindLongestEdge(t, &le1, &le2, &i1, &i2);
-        float length = glm::distance(
-            m_grid.WorldPosition(t->vertices[le1]), 
-            m_grid.WorldPosition(t->vertices[le2]));
-        assert(glm::abs(length - radius) < 0.0001f);
-    }
     // Calculate the distance from the diamond's bounding sphere
     // to the view origin.
     float distance = glm::distance(m_viewOrigin, m_grid.WorldPosition(d->center));
@@ -107,7 +102,7 @@ bool TetraHierarchy::ShouldSplit(const Diamond* d)
 
 bool TetraHierarchy::ShouldMerge(const Diamond* d) 
 {
-    return (float)(d->level) > (GoalLevel(d) + 1.0f);    
+    return (float)(d->level) >= (GoalLevel(d) + 1.0f);    
 }
 
 Diamond* TetraHierarchy::CreateRootDiamond()
@@ -193,9 +188,11 @@ void TetraHierarchy::Split(Diamond* d)
     // Add d to the beggining of the merge queue : no need
     // to check it again.
     m_mergeQueue.AddFirst(d);
+    // Add children to the split queue.
     for (const vertex_t& c : d->children) {
         // It is okay to create a diamond here.
         Diamond* cd = FindOrCreateDiamond(c);
+        assert(!cd->isSplit);
         // we want to check the child diamonds : add
         // them to the end of the split queue.
         assert(cd->queueID == m_splitQueue.GetID() ||
@@ -204,8 +201,13 @@ void TetraHierarchy::Split(Diamond* d)
             // If we are here, then cd has just been created.
             m_splitQueue.AddLast(cd);
         }
-        else {
-            assert(!ShouldSplit(cd) || !cd->isSplit);
+    }
+    // Remove any parent that is in the merge queue.
+    for (const vertex_t& p : d->parents) {
+        Diamond* pd = FindDiamond(p);
+        assert(pd);
+        if (pd->queueID == m_mergeQueue.GetID()) {
+            m_mergeQueue.Remove(pd);
         }
     }
     for (Tetra* t : d->activeTetras) {
@@ -214,38 +216,54 @@ void TetraHierarchy::Split(Diamond* d)
     d->isSplit = true;
 }
 
-/*void TetraHierarchy::ForceMerge(Diamond* d)
+void TetraHierarchy::Merge(Diamond* d)
 {
     assert(d->isSplit);
     assert(d->IsComplete());
-    assert(!IsLeaf(d));
     // Ensure d's children are merged.
     for (const vertex_t& c : d->children) {
         Diamond* cd = FindDiamond(c);
         assert(cd);
         if (cd->isSplit) {
-            ForceMerge(cd);
+            Merge(cd);
         }
-        assert(IsLeaf(cd));
-        assert(!cd->isSplit);
     }    
     // Actually merge the diamond.
     // After this the diamond structure should still be sound.
-    AddLeaf(d);
+    m_mergeQueue.Remove(d);
+    // no need to check d again : add it to the beggining of the split queue.
+    m_splitQueue.AddFirst(d);
+    for (const vertex_t& p : d->parents) {
+        Diamond* pd = FindDiamond(p);
+        assert(pd);
+        assert(pd->isSplit); 
+        assert(pd->queueID == DiamondQueue::NO_QUEUE_ID);
+
+        bool pdHasSplitChild = false;
+        for (const vertex_t& c : pd->children) {
+            Diamond* pcd = FindDiamond(c);
+            assert(pcd);
+            // TAKE CARE : we haven't marked d as not split yet,
+            // but we should count it here !
+            if (pcd->isSplit && pcd != d) {
+                pdHasSplitChild = true;
+                break;
+            } 
+        }
+        if (!pdHasSplitChild) {
+            m_mergeQueue.AddLast(pd);
+        }
+    }
     for (const vertex_t& c : d->children) {
-        // Make sure we do this before we merge d's tetras
-        // (which could cause d's children to be destroyed).
-        // We would thus be creating a new diamond cd here.
         Diamond* cd = FindDiamond(c);
         assert(cd);
-        RemoveLeaf(cd);
+        assert(cd->queueID == m_splitQueue.GetID());
     }
     for (Tetra* t : d->activeTetras) {
         MergeTetra(t);
     }
     d->isSplit = false;
-    assert(IsLeaf(d));
-}*/
+}
 
 
 
@@ -276,7 +294,7 @@ void TetraHierarchy::SplitTetra(Tetra* t)
 
 void TetraHierarchy::MergeTetra(Tetra* t) 
 {
-    /*Tetra* t0 = t->children[0]; 
+    Tetra* t0 = t->children[0]; 
     // t0 should be a leaf.
     assert(t0->children[0] == nullptr && t0->children[1] == nullptr); 
     RemoveFromDiamond(t0);
@@ -288,7 +306,7 @@ void TetraHierarchy::MergeTetra(Tetra* t)
     RemoveFromDiamond(t1);
     delete t1; 
 
-    t->children[0] = t->children[1] = nullptr;*/
+    t->children[0] = t->children[1] = nullptr;
 }
 
 void TetraHierarchy::AddToDiamond(Tetra* t) 
@@ -303,7 +321,7 @@ void TetraHierarchy::AddToDiamond(Tetra* t)
 
 void TetraHierarchy::RemoveFromDiamond(Tetra* t) 
 {
-    /*uint8_t le1, le2, i1, i2;
+    uint8_t le1, le2, i1, i2;
     FindLongestEdge(t, &le1, &le2, &i1, &i2);
     const vertex_t sv = VertexMidpoint(t->vertices[le1], t->vertices[le2]);
     Diamond* d = FindDiamond(sv);
@@ -318,10 +336,10 @@ void TetraHierarchy::RemoveFromDiamond(Tetra* t)
     }
     // delete the diamond if this was its last tetra.
     if (d->activeTetras.size() == 0) {
-        assert(!IsLeaf(d));
+        m_splitQueue.Remove(d);
         m_diamonds.erase(d->center);
         delete d;
-    }*/
+    }
 }
 
 void TetraHierarchy::ComputeMesh(Tetra* t) 

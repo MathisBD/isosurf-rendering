@@ -36,6 +36,7 @@ public:
     void SplitMerge(const glm::vec3& viewOrigin, uint32_t maxTimeMilliseconds);
     
     inline const Diamond* GetFirstLeafDiamond() const { return m_splitQueue.GetFirst(); }
+    inline const Diamond* GetFirstMQDiamond() const { return m_mergeQueue.GetFirst(); }
     inline const Mesh& GetOutlineMesh() const { 
         m_outline->Build();
         return *m_outline; 
@@ -58,7 +59,11 @@ private:
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
     std::unordered_map<vertex_t, Diamond*> m_diamonds;
+    // The split queue holds all leaf diamonds,
+    // i.e. diamonds that are not split.
     DiamondQueue m_splitQueue;
+    // The merge queue holds all diamonds that are split
+    // but have no split child.
     DiamondQueue m_mergeQueue;
 
     Diamond* CreateRootDiamond();

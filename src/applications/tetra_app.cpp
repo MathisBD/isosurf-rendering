@@ -159,6 +159,7 @@ void TetraApp::DrawMesh()
     while (leaf) {
         // Blend between the shallow and deep colors.
         float alpha = leaf->Depth() / (float)m_hierarchy->GetMaxDepth();
+        //float alpha = 1;
         assert(0 <= alpha && alpha <= 1);
         const glm::vec3& c = m_shallowMeshColor * (1 - alpha) + m_deepMeshColor * alpha;
         m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);

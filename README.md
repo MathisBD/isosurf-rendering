@@ -61,6 +61,3 @@ To get the parents of a diamond :
 
 
 
-=================================
-
-
