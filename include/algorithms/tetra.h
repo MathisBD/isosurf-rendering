@@ -22,9 +22,6 @@ public:
 
     Tetra* children[2];
     Tetra* parent;
-    
-    Tetra* nextLeaf;
-    Tetra* prevLeaf;
 
     Mesh* mesh;
 
@@ -33,7 +30,6 @@ public:
     {
         children[0] = children[1] = nullptr;
         parent = nullptr;
-        nextLeaf = prevLeaf = nullptr;
         mesh = nullptr;
     };
 
@@ -41,7 +37,6 @@ public:
     {
         children[0] = children[1] = nullptr;
         parent = p;
-        nextLeaf = prevLeaf = nullptr;
         p->children[childIdx] = this;
         mesh = nullptr;
     };

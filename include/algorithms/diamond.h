@@ -29,34 +29,18 @@ public:
     // A diamond is split if it is complete and 
     // all its tetras are split.
     bool isSplit;
-    // The last time we checked to split this diamond.
-    uint32_t lastCheck;
 
-    Diamond* nextLeaf = nullptr;
-    Diamond* prevLeaf = nullptr;
+    // A diamond can be in the split or merge queue.
+    int queueID; // -1 means no queue.
+    Diamond* queueNext = nullptr;
+    Diamond* queuePrev = nullptr;
 
     Diamond(const vertex_t& center_, uint8_t maxLevel_);
 
     inline uint32_t Depth() const { return 3*((uint32_t)level) + 2; }
     void Print() const;
-    
-    inline bool IsComplete() const
-    {
-        return activeTetras.size() >= maxTetraCount;
-    }
+    bool IsComplete() const;
 
-    inline bool IsLeaf() const 
-    {
-        if (nextLeaf || prevLeaf) {
-            assert(!isSplit);
-            return true;
-        }
-        else {
-            assert(IsComplete());
-            assert(isSplit);
-            return false;
-        }
-    }
 private:
     void InitChildren();
     void InitParents();

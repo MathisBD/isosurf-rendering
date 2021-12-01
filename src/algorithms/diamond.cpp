@@ -1,5 +1,6 @@
 #include "algorithms/diamond.h"
 #include "algorithms/tetra_hierarchy.h"
+#include "algorithms/diamond_queue.h"
 
 
 template <typename T>
@@ -41,9 +42,8 @@ Diamond::Diamond(const vertex_t& center_, uint8_t maxLevel_)
     center = center_;
     maxLevel = maxLevel_;
     isSplit = false;
-    lastCheck = 0;
-    nextLeaf = nullptr;
-    prevLeaf = nullptr;
+    queueNext = queuePrev = nullptr;
+    queueID = DiamondQueue::NO_QUEUE_ID;
 
     // Compute the diamond info.
     scale = min3(TrailingZeros(center.x), TrailingZeros(center.y), TrailingZeros(center.z));
@@ -262,4 +262,9 @@ uint8_t Diamond::LimitCoordsCount(const vertex_t& v)
     if (v.y == 0 || v.y == maxCoord) { count++; }
     if (v.z == 0 || v.z == maxCoord) { count++; }
     return count;
+}
+
+bool Diamond::IsComplete() const
+{
+    return activeTetras.size() >= maxTetraCount;
 }

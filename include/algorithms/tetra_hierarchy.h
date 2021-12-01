@@ -5,7 +5,7 @@
 #include "algorithms/cube_grid.h"
 #include "glm/gtx/hash.hpp"
 #include "rendering/mesh.h"
-#include <queue>
+#include "algorithms/diamond_queue.h"
 
 
 // TODO : use a memory pool for the tetras.
@@ -35,7 +35,7 @@ public:
     
     void SplitMerge(const glm::vec3& viewOrigin, uint32_t maxTimeMilliseconds);
     
-    inline const Diamond* GetFirstLeafDiamond() const { return m_firstLeafDiamond; }
+    inline const Diamond* GetFirstLeafDiamond() const { return m_splitQueue.GetFirst(); }
     inline const Mesh& GetOutlineMesh() const { 
         m_outline->Build();
         return *m_outline; 
@@ -44,8 +44,7 @@ public:
     inline uint32_t GetMaxDepth() const { return 3*m_params.maxLevel + 2; }
     
     // The valid coordinates range from 0 to MaxCoord(maxLevel) incuded.
-    inline static uint32_t MaxCoord(uint32_t maxLevel)
-    {
+    inline static uint32_t MaxCoord(uint32_t maxLevel) {
         return (1U << (maxLevel+1));
     }
 private:
@@ -59,21 +58,16 @@ private:
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
     std::unordered_map<vertex_t, Diamond*> m_diamonds;
-    Diamond* m_rootDiamond = nullptr;
-    Diamond* m_firstLeafDiamond = nullptr;
+    DiamondQueue m_splitQueue;
+    DiamondQueue m_mergeQueue;
 
-    // Split/Merge
-    uint32_t m_checkID = 0;
-    std::queue<Diamond*> m_splitQueue;
-    std::queue<Diamond*> m_mergeQueue;
-
-
-    void CreateRootDiamond();
+    Diamond* CreateRootDiamond();
+    // Returns a nullptr if the diamond wasn't found.
+    Diamond* FindDiamond(const vertex_t& center);
     Diamond* FindOrCreateDiamond(const vertex_t& center);
-    
-    void RebuildSMQueues();
-    void ForceSplit(Diamond* d);
-    void ForceMerge(Diamond* d);
+
+    void Split(Diamond* d);
+    void Merge(Diamond* d);
     
     float GoalLevel(const Diamond* d);
     bool ShouldMerge(const Diamond* d);
@@ -93,13 +87,11 @@ private:
     // of the longest edge of t.
     // (i1, i2) are the indices of the other vertices.
     void FindLongestEdge(
-        Tetra* t, 
+        const Tetra* t, 
         uint8_t* le1, 
         uint8_t* le2, 
         uint8_t* i1, 
         uint8_t* i2);
 
     void AddOutline(const Tetra* t);
-    void AddLeaf(Diamond* d);
-    void RemoveLeaf(Diamond* d);
 };

@@ -166,7 +166,7 @@ void TetraApp::DrawMesh()
         for (const Tetra* t : leaf->activeTetras) {
             m_renderer->Draw(*(t->mesh), *m_defaultShader);
         }
-        leaf = leaf->nextLeaf;
+        leaf = leaf->queueNext;
     }
 }
 
