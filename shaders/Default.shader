@@ -5,8 +5,7 @@
 uniform mat4 u_worldToView;
 uniform mat4 u_viewToScreen;
 
-in vec3 vertPosition;
-in vec3 vertNormal;
+layout (location = 0) in vec3 vertPosition;
 
 out vec3 fragViewPos;
 
@@ -26,7 +25,7 @@ uniform vec3 u_lightDirection;
 
 in vec3 fragViewPos;
 
-out vec4 outColor;
+layout (location = 0) out vec4 outColor;
 
 void main()
 {
