@@ -24,15 +24,15 @@ public:
 
     InputManager(GLFWwindow* window);
 
-    void ShowCursor();
-    void HideCursor();
-    void DisableCursor();
+    void ShowCursor() const;
+    void HideCursor() const;
+    void DisableCursor() const;
     // Axis orientation :
     // x : left to right.
     // y : bottom to top.
     // The center of the screen is at (0, 0).
     // The borders of the screen are at -1 and +1.
-    glm::vec2 CursorPosition();
+    glm::vec2 CursorPosition() const;
 
     // This shouldn't be called from anywhere else than in the input manager.
     void KeyCallback(int key, int action);

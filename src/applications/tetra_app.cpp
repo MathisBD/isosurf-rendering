@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 
-static float Circle(glm::vec3 pos)
+static float Sphere(glm::vec3 pos)
 {
     return 100.0f - glm::distance(pos, {0, 0, -100});
 }
@@ -30,7 +30,8 @@ TetraApp::TetraApp() :
 {
     m_defaultShader = new Shader("../shaders/Default.shader");
     m_wireframeShader = new Shader("../shaders/Wireframe.shader");
-    m_camera = new Camera({0, 0, 15.0f}, 50.0f, 1000.0f);
+    m_camera = new Camera({0, 0, 15.0f}, 50.0f, 1000.0f, 45.0f, 
+        WINDOW_PIXEL_WIDTH / (float)WINDOW_PIXEL_HEIGHT);
    
     m_drawOutline = false;
     m_outlineColor = {0.9, 0.3, 0.3};
@@ -62,53 +63,7 @@ TetraApp::~TetraApp()
 
 void TetraApp::Update()
 {
-    // translate camera
-    if (m_inputMgr->m_leftKey == KeyState::PRESSED) {
-        m_camera->Move({1.0, 0.0, 0.0});
-    }
-    if (m_inputMgr->m_rightKey == KeyState::PRESSED) {
-        m_camera->Move({-1.0, 0.0, 0.0});
-    }
-    if (m_inputMgr->m_downKey == KeyState::PRESSED) {
-        m_camera->Move({0.0, 0.0, -1.0});
-    }
-    if (m_inputMgr->m_upKey == KeyState::PRESSED) {
-        m_camera->Move({0.0, 0.0, 1.0});
-    }
-    if (m_inputMgr->m_rShiftKey == KeyState::PRESSED) {
-        m_camera->Move({0.0, 1.0, 0.0});
-    }
-    if (m_inputMgr->m_rCtrlKey == KeyState::PRESSED) {
-        m_camera->Move({0.0, -1.0, 0.0});
-    }
-
-    // rotate camera
-    if (m_inputMgr->m_rightMouse == KeyState::PRESSED) {
-        if (!m_rotateCamera) {
-            m_inputMgr->DisableCursor();
-            m_prevCursorPos = m_inputMgr->CursorPosition();
-        }
-        m_rotateCamera = true;
-    }
-    if (m_inputMgr->m_rightMouse == KeyState::RELEASED) {
-        if (m_rotateCamera) {
-            m_inputMgr->ShowCursor();
-        }
-        m_rotateCamera = false;
-    }
-    if (m_rotateCamera) {
-        glm::vec2 cursorPos = m_inputMgr->CursorPosition();
-        m_camera->RotateHorizontal(-(cursorPos.x - m_prevCursorPos.x));
-        m_camera->RotateVertical(-(cursorPos.y - m_prevCursorPos.y));
-        m_prevCursorPos = cursorPos;
-    }
-
-    m_camera->UpdateMatrix(
-        45.0f, 
-        WINDOW_PIXEL_WIDTH / (float)WINDOW_PIXEL_HEIGHT,
-        0.1f,
-        1000.0f); 
-
+    m_camera->Update(m_inputMgr);
     m_hierarchy->SplitMerge(m_camera->WorldPosition(), 15);
 }
 

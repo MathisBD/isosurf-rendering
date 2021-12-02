@@ -67,22 +67,22 @@ void InputManager::MouseButtonCallback(int button, int action)
 }
 
 
-void InputManager::ShowCursor() 
+void InputManager::ShowCursor() const
 {
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);    
 }
 
-void InputManager::HideCursor() 
+void InputManager::HideCursor() const
 {
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);    
 }
 
-void InputManager::DisableCursor() 
+void InputManager::DisableCursor() const
 {
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);    
 }
 
-glm::vec2 InputManager::CursorPosition() 
+glm::vec2 InputManager::CursorPosition() const
 {
     double mouseX;
     double mouseY;
