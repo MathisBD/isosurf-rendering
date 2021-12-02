@@ -11,8 +11,9 @@ inline uint32_t MCChunk::Index3D(uint32_t x, uint32_t y, uint32_t z)
 MCChunk::MCChunk(
     const HexaGrid& grid, 
     float (*density)(glm::vec3 position),
-    Mesh* mesh) :
-    m_dim(grid.dim), m_density(density), m_mesh(mesh)
+    Mesh* mesh,
+    const glm::vec3& color) :
+    m_dim(grid.dim), m_density(density), m_mesh(mesh), m_color(color)
 {
     LabelVertices(grid);
 }
@@ -28,7 +29,6 @@ void MCChunk::Compute()
 {    
     LabelEdges();
     Triangulate();
-    m_mesh->Build();
 }
 
 void MCChunk::LabelVertices(const HexaGrid& grid) 
@@ -95,7 +95,7 @@ void MCChunk::CalculateEdgeData(uint32_t v1, uint32_t v2, uint32_t direction)
             }
         }
         glm::vec3 pos = (start + end) / 2.0f;
-        edge.isoVertexIdx = m_mesh->AddVertex(pos);
+        edge.isoVertexIdx = m_mesh->AddVertex({pos, m_color});
     }
 }
 

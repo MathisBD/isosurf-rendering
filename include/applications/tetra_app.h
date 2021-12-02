@@ -13,7 +13,7 @@
 class TetraApp : public Application
 {
 public:
-    inline const static OpenSimplexNoise::Noise s_noise = {42};
+    inline const static OpenSimplexNoise::Noise s_noise = {43};
 
     TetraApp();
     ~TetraApp();

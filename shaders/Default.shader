@@ -6,13 +6,16 @@ uniform mat4 u_worldToView;
 uniform mat4 u_viewToScreen;
 
 layout (location = 0) in vec3 vertPosition;
+layout (location = 1) in vec3 vertColor;
 
 out vec3 fragViewPos;
+out vec3 fragColor;
 
 void main()
 {
     vec4 viewPos = u_worldToView * vec4(vertPosition, 1.0);
     fragViewPos = viewPos.xyz;
+    fragColor = vertColor;
     gl_Position = u_viewToScreen * viewPos;
 }
 
@@ -20,10 +23,10 @@ void main()
 #shader fragment
 #version 430 core
 
-uniform vec3 u_color;
 uniform vec3 u_lightDirection;
 
 in vec3 fragViewPos;
+in vec3 fragColor;
 
 layout (location = 0) out vec4 outColor;
 
@@ -38,5 +41,5 @@ void main()
     
     float ambient = 0.4;
 
-    outColor = vec4(u_color, 1.0) * (ambient + diffuse);
+    outColor = vec4(fragColor, 1.0) * (ambient + diffuse);
 }

@@ -5,11 +5,14 @@
 uniform mat4 u_worldToView;
 uniform mat4 u_viewToScreen;
 
-in vec3 vertPosition;
-in vec3 vertNormal;
+layout (location = 0) in vec3 vertPosition;
+layout (location = 1) in vec3 vertColor;
+
+out vec3 fragColor;
 
 void main()
 {
+    fragColor = vertColor;
     gl_Position = u_viewToScreen * u_worldToView * vec4(vertPosition, 1.0);
 }
 
@@ -19,9 +22,11 @@ void main()
 
 uniform vec3 u_color;
 
-out vec4 outColor;
+in vec3 fragColor;
+
+layout (location = 0) out vec4 outColor;
 
 void main()
 {
-    outColor = vec4(u_color, 1.0);
+    outColor = vec4(fragColor, 1.0);
 }

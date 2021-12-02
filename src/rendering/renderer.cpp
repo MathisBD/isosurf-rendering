@@ -31,5 +31,9 @@ void Renderer::Draw(const Mesh& mesh, const Shader& shader) const
     va.Bind();
     ib.Bind();
 
-    GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), IndexBuffer::s_glIndexType, nullptr));
+    GLCall(glDrawElements(
+        GL_TRIANGLES, 
+        mesh.GetTriangleCount() * 3, 
+        IndexBuffer::s_glIndexType, 
+        nullptr));
 }

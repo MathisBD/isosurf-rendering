@@ -37,10 +37,6 @@ public:
     
     inline const Diamond* GetFirstLeafDiamond() const { return m_splitQueue.GetFirst(); }
     inline const Diamond* GetFirstMQDiamond() const { return m_mergeQueue.GetFirst(); }
-    inline const Mesh& GetOutlineMesh() const { 
-        m_outline->Build();
-        return *m_outline; 
-    }
     inline uint32_t GetMaxLevel() const { return m_params.maxLevel; }
     inline uint32_t GetMaxDepth() const { return 3*m_params.maxLevel + 2; }
     
@@ -54,8 +50,7 @@ private:
     float (*m_density)(glm::vec3 pos);
     Parameters m_params;
     glm::vec3 m_viewOrigin;
-    Mesh* m_outline = nullptr;
-
+   
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
     std::unordered_map<vertex_t, Diamond*> m_diamonds;
@@ -98,5 +93,5 @@ private:
         uint8_t* i1, 
         uint8_t* i2);
 
-    void AddOutline(const Tetra* t);
+    //void AddOutline(const Tetra* t);
 };

@@ -18,6 +18,7 @@ typedef glm::u32vec3 vertex_t;
 class Tetra
 {
 public:
+    uint32_t depth;
     vertex_t vertices[4];
 
     Tetra* children[2];
@@ -28,6 +29,7 @@ public:
     // Root tetrahedron.
     Tetra()
     {
+        depth = 0;
         children[0] = children[1] = nullptr;
         parent = nullptr;
         mesh = nullptr;
@@ -35,6 +37,7 @@ public:
 
     Tetra(Tetra* p, uint8_t childIdx) 
     {
+        depth = p->depth + 1;
         children[0] = children[1] = nullptr;
         parent = p;
         p->children[childIdx] = this;

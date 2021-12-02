@@ -35,7 +35,8 @@ public:
     MCChunk(
         const HexaGrid& grid, 
         float (*density)(glm::vec3 pos),
-        Mesh* mesh);
+        Mesh* mesh,
+        const glm::vec3& color);
     void Compute();
     ~MCChunk();
 private:
@@ -46,6 +47,7 @@ private:
 
     glm::u32vec3 m_dim;
     float (*m_density)(glm::vec3 position);
+    glm::vec3 m_color;
     
     // the vertex at (x,y,z) is stored at Index3D(x,y,z).
     MCVertex* m_vertices = nullptr;

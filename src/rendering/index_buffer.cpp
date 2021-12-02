@@ -2,16 +2,24 @@
 #include "rendering/gl_errors.h"
 
 
-IndexBuffer::IndexBuffer(const index_t* data, uint32_t count) : m_count(count) 
+IndexBuffer::IndexBuffer(GLenum mode, const void* data, size_t size) : 
+    m_size(size) 
 {
     GLCall(glGenBuffers(1, &m_rendererID));
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_rendererID));
-    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(index_t), data, GL_STATIC_DRAW));    
+    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, mode));    
 }
 
 IndexBuffer::~IndexBuffer() 
 {
     GLCall(glDeleteBuffers(1, &m_rendererID));    
+}
+
+void IndexBuffer::UploadData(const void* data, size_t size) 
+{
+    assert(size <= m_size);
+    Bind();
+    GLCall(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, data));    
 }
 
 void IndexBuffer::Bind() const 
@@ -24,7 +32,7 @@ void IndexBuffer::Unbind() const
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));    
 }
 
-uint32_t IndexBuffer::GetCount() const
+size_t IndexBuffer::GetSize() const
 {
-    return m_count;    
+    return m_size;    
 }

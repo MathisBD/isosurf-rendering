@@ -61,7 +61,6 @@ TetraHierarchy::TetraHierarchy(
     uint32_t maxCoord = MaxCoord(m_params.maxLevel);
     assert(m_grid.dim == maxCoord + 1);
 
-    m_outline = new Mesh();
     Diamond* rootDiamond = CreateRootDiamond();
     m_splitQueue.AddFirst(rootDiamond);
 }
@@ -139,7 +138,7 @@ Diamond* TetraHierarchy::CreateRootDiamond()
         t->vertices[2] = cube_verts[tetraEdges[i][0]];
         t->vertices[3] = cube_verts[tetraEdges[i][1]];
         AddToDiamond(t);
-        AddOutline(t);
+        //AddOutline(t);
         ComputeMesh(t);
     }
     return rootDiamond;
@@ -279,7 +278,7 @@ void TetraHierarchy::SplitTetra(Tetra* t)
     t0->vertices[2] = VertexMidpoint(v[le1], v[le2]);
     t0->vertices[3] = v[le1];
     AddToDiamond(t0);
-    AddOutline(t0);
+    //AddOutline(t0);
     ComputeMesh(t0);
 
     Tetra* t1 = new Tetra(t, 1);
@@ -288,7 +287,7 @@ void TetraHierarchy::SplitTetra(Tetra* t)
     t1->vertices[2] = VertexMidpoint(v[le1], v[le2]);
     t1->vertices[3] = v[le2];
     AddToDiamond(t1);
-    AddOutline(t1);
+    //AddOutline(t1);
     ComputeMesh(t1);
 }
 
@@ -353,7 +352,6 @@ void TetraHierarchy::ComputeMesh(Tetra* t)
         { 2,    1, 0, 3 },
         { 3,    1, 2, 0 },
     };
-
     assert(!t->mesh);
     t->mesh = new Mesh();
     for (uint8_t i = 0; i < 4; i++) {
@@ -373,12 +371,17 @@ void TetraHierarchy::ComputeMesh(Tetra* t)
         corners[0b011] = (v0 + v2 + v3) / 3.0f;
         corners[0b101] = (v0 + v1 + v3) / 3.0f;
         corners[0b111] = (v0 + v1 + v2 + v3) / 4.0f;
-
+        
+        float alpha = t->depth / (float)GetMaxDepth();
+        assert(0 <= alpha && alpha <= 1);
+        const glm::vec3& color = glm::vec3(1, 1, 0) * (1 - alpha) + glm::vec3(1, 0, 1) * alpha;
+        
         HexaGrid grid = HexaGrid(m_params.mcChunkDim, corners);
-        MCChunk mc = MCChunk(grid, m_density, t->mesh);
+        MCChunk mc = MCChunk(grid, m_density, t->mesh, color);
         mc.Compute();
     }
-    t->mesh->Build();
+    t->mesh->AllocateGPUBuffers(GL_STATIC_DRAW, t->mesh->GetVertexCount(), t->mesh->GetTriangleCount() * 3);
+    t->mesh->UploadGPUBuffers();
 }
 
 
@@ -434,14 +437,15 @@ void TetraHierarchy::FindLongestEdge(
     }
 }
 
-void TetraHierarchy::AddOutline(const Tetra* t) 
+/*void TetraHierarchy::AddOutline(const Tetra* t) 
 {
-    uint32_t i0 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[0]));
-    uint32_t i1 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[1]));
-    uint32_t i2 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[2]));
-    uint32_t i3 = m_outline->AddVertex(m_grid.WorldPosition(t->vertices[3]));
+    glm::vec3 color = { 0, 0, 0 };
+    uint32_t i0 = m_outline->AddVertex({ m_grid.WorldPosition(t->vertices[0]), color });
+    uint32_t i1 = m_outline->AddVertex({ m_grid.WorldPosition(t->vertices[1]), color });
+    uint32_t i2 = m_outline->AddVertex({ m_grid.WorldPosition(t->vertices[2]), color });
+    uint32_t i3 = m_outline->AddVertex({ m_grid.WorldPosition(t->vertices[3]), color });
     m_outline->AddTriangle(i0, i1, i2);
     m_outline->AddTriangle(i0, i1, i3);
     m_outline->AddTriangle(i0, i2, i3);
     m_outline->AddTriangle(i1, i2, i3);
-}
+}*/

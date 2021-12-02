@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 
-static float Circle(glm::vec3 pos)
+/*static float Circle(glm::vec3 pos)
 {
     return 5 - glm::length(pos);
 }
@@ -135,4 +135,4 @@ void CubeApp::Render()
     //GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
     //m_shader->SetUniform3f("u_color", 1, 0, 1);
     //m_renderer->Draw(m_mesh->GetVertexArray(), m_mesh->GetIndexBuffer(), *m_shader);
-}
+}*/
