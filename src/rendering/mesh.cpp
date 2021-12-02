@@ -84,3 +84,13 @@ const VertexArray& Mesh::GetVertexArray() const
     assert(m_va);
     return *m_va;
 }
+
+uint32_t Mesh::GetTriangleCount() const
+{
+    return m_indexCount / 3; // there are 3 indices per triangle
+}
+
+uint32_t Mesh::GetVertexCount() const
+{
+    return m_vertexCount / 3; // there are 3 floats per vertex
+}

@@ -21,8 +21,8 @@ protected:
     virtual void Update() = 0;
     virtual void Render() = 0;
 public:
-    const static int WINDOW_PIXEL_WIDTH = 1200;
-    const static int WINDOW_PIXEL_HEIGHT = 800;
+    const static int WINDOW_PIXEL_WIDTH = 1900;
+    const static int WINDOW_PIXEL_HEIGHT = 1000;
 
     Application();
     ~Application();

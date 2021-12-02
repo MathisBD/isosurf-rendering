@@ -19,18 +19,19 @@ static float Circle(glm::vec3 pos)
 static float Noise(glm::vec3 pos)
 {
     //float step = 1.0f - glm::smoothstep(80.0f, 100.0f, glm::length(pos));
-    pos /= 50;
+    pos /= 80;
     float x = TetraApp::s_noise.eval(pos.x, pos.y, pos.z);
     //return ((x + 1.0f) * step) - 1.0f;
     return x;
 }
 
-TetraApp::TetraApp()
+TetraApp::TetraApp() :
+    m_drawCalls(32), m_triangles(32), m_vertices(32)
 {
     m_defaultShader = new Shader("../shaders/Default.shader");
     m_wireframeShader = new Shader("../shaders/Wireframe.shader");
-
     m_camera = new Camera({0, 0, 15.0f}, 50.0f, 1000.0f);
+
     m_drawOutline = false;
     m_outlineColor = {0.9, 0.3, 0.3};
     m_shallowMeshColor = {1, 1, 0};
@@ -40,7 +41,7 @@ TetraApp::TetraApp()
     TetraHierarchy::Parameters params;
     params.maxLevel = 10;
     params.mcChunkDim = 4;
-    params.splitFactor = 0.5f;
+    params.splitFactor = 0.4f;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(params.maxLevel);
     CubeGrid grid = CubeGrid(
         maxCoord+1,
@@ -118,8 +119,12 @@ void TetraApp::DrawImGui()
     ImGui::NewFrame();
     {
         ImGui::Begin("Application info"); 
-        ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); 
- 
+        ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 
+            1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate); 
+        ImGui::Text("Average draw calls per frame : %.0f", m_drawCalls.GetAverage()); 
+        ImGui::Text("Average vertex count : %.0f", m_vertices.GetAverage()); 
+        ImGui::Text("Average triangle count : %.0f", m_triangles.GetAverage());
+
         ImGui::ColorEdit3("Mesh shallow color", (float*)&m_shallowMeshColor);
         ImGui::ColorEdit3("Mesh deep color", (float*)&m_deepMeshColor);
         ImGui::Checkbox("Draw outline", &m_drawOutline);
@@ -156,19 +161,27 @@ void TetraApp::DrawMesh()
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
     
     const Diamond* leaf = m_hierarchy->GetFirstLeafDiamond();
+    uint32_t drawCalls = 0;
+    uint32_t triangles = 0;
+    uint32_t vertices = 0;
     while (leaf) {
         // Blend between the shallow and deep colors.
         float alpha = leaf->Depth() / (float)m_hierarchy->GetMaxDepth();
-        //float alpha = 1;
         assert(0 <= alpha && alpha <= 1);
         const glm::vec3& c = m_shallowMeshColor * (1 - alpha) + m_deepMeshColor * alpha;
         m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);
     
         for (const Tetra* t : leaf->activeTetras) {
             m_renderer->Draw(*(t->mesh), *m_defaultShader);
+            drawCalls++;
+            vertices += t->mesh->GetVertexCount();
+            triangles += t->mesh->GetTriangleCount();
         }
         leaf = leaf->queueNext;
     }
+    m_drawCalls.AddSample(drawCalls);
+    m_triangles.AddSample(triangles);
+    m_vertices.AddSample(vertices);
 }
 
 void TetraApp::Render()

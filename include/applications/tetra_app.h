@@ -6,6 +6,7 @@
 #include "algorithms/marching_cubes.h"
 #include "algorithms/tetra_hierarchy.h"
 #include "third_party/open_simplex_noise/noise.h"
+#include "utils/running_average.h"
 
 
 
@@ -31,6 +32,11 @@ protected:
     glm::vec3 m_outlineColor;
     glm::vec3 m_deepMeshColor;
     glm::vec3 m_shallowMeshColor;
+
+    // statistics
+    RunningAverage<float> m_drawCalls;
+    RunningAverage<float> m_vertices;
+    RunningAverage<float> m_triangles;
 
     void Update() override;
     void Render() override;

@@ -20,6 +20,9 @@ public:
     
     void Build();
 
+    uint32_t GetVertexCount() const;
+    uint32_t GetTriangleCount() const;
+
     const VertexArray& GetVertexArray() const;
     const IndexBuffer& GetIndexBuffer() const;
 private:
