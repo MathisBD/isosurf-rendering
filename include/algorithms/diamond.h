@@ -35,6 +35,9 @@ public:
     int queueID; // -1 means no queue.
     Diamond* queueNext = nullptr;
     Diamond* queuePrev = nullptr;
+    // if forceSplit >= hierarchy.m_checkID, 
+    // then we forcefully split this diamond.
+    uint32_t forceSplit;
 
     Diamond(const vertex_t& center_, uint8_t maxLevel_);
 

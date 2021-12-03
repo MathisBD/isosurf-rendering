@@ -114,10 +114,9 @@ bool Camera::Update(const InputManager* input)
 
 void Camera::UpdateMatrix() 
 {
-    assert(FOVdeg > 0.0f);
-    assert(aspectRatio > 0.0f);
-    assert(clipNear > 0.0f);
-
+    assert(m_fovDeg > 0.0f);
+    assert(m_aspectRatio > 0.0f);
+    
     m_worldToView = glm::lookAt(m_position, m_position + m_forward, m_up);  
     m_viewToScreen = glm::perspective(glm::radians(m_fovDeg), m_aspectRatio, 1.0f, 1000.0f);
 }

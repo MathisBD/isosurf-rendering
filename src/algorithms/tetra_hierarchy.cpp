@@ -19,23 +19,26 @@ void TetraHierarchy::SplitMerge(
     bool recalculate,
     uint32_t maxTimeMilliseconds) 
 {
-    if (recalculate || m_firstSplitMerge) {
+    if (recalculate || m_checkID == 0) {
         m_viewOrigin = viewOrigin;
         m_frustrumPlanes = frustrumPlanes;
         m_splitQueue.SetCurrentToFirst();
         m_mergeQueue.SetCurrentToFirst();
-        m_firstSplitMerge = false;
+        m_checkID++;
     }
     // Merge
     auto start = std::chrono::high_resolution_clock::now();
     Diamond* d;
     while (d = m_mergeQueue.GetCurrent()) {
+        assert(d->isSplit);
         int64_t time = MillisecondsSince(start);
         if (time > maxTimeMilliseconds) {
-            printf("M %ld\n", time);
+            printf("%ld\n", time);
             return;
         }
-        if (ShouldMerge(d) && d->isSplit) {
+        assert(d->forceSplit <= m_checkID);
+        if (ShouldMerge(d) || d->forceSplit == m_checkID) {
+            printf("M");
             Merge(d);
         }
         else {
@@ -44,12 +47,15 @@ void TetraHierarchy::SplitMerge(
     } 
     // Split
     while (d = m_splitQueue.GetCurrent()) {
+        assert(!d->isSplit);
         int64_t time = MillisecondsSince(start);
         if (time > maxTimeMilliseconds) {
-            printf("S %ld\n", time);
+            printf("%ld\n", time);
             return;
         }
-        if (ShouldSplit(d) && !d->isSplit) {
+        assert(d->forceSplit <= m_checkID);
+        if (ShouldSplit(d) || d->forceSplit == m_checkID) {
+            printf("S");
             Split(d);
         }
         else {
@@ -178,17 +184,25 @@ void TetraHierarchy::Split(Diamond* d)
 {
     assert(!d->isSplit);
     // Ensure d is complete.
+    bool hasUnsplitParent = false;
     for (const vertex_t& p : d->parents) {
         // It is okay to create a diamond pd
         // since we are going to add tetras to it anyways.
         Diamond* pd = FindOrCreateDiamond(p);
         if (!pd->isSplit) {
-            Split(pd);
+            m_splitQueue.Remove(pd);
+            m_splitQueue.AddBeforeCurrent(pd);
+            pd->forceSplit = m_checkID;
+            hasUnsplitParent = true;
         }
-    }    
+    }
+    // Wait for the parents to be split.
+    if (hasUnsplitParent) {
+        return;
+    }
     assert(d->IsComplete());
 
-    // Update the split/merge qeues.
+    // Update the split/merge queues.
     m_splitQueue.Remove(d);
     // Add d to the beggining of the merge queue : no need
     // to check it again.
@@ -229,9 +243,7 @@ void TetraHierarchy::Merge(Diamond* d)
     for (const vertex_t& c : d->children) {
         Diamond* cd = FindDiamond(c);
         assert(cd);
-        if (cd->isSplit) {
-            Merge(cd);
-        }
+        assert(!cd->isSplit);
     }    
     // Actually merge the diamond.
     // After this the diamond structure should still be sound.

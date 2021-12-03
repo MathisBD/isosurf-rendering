@@ -92,7 +92,9 @@ void DiamondQueue::AddBeforeCurrent(Diamond* d)
     d->queueNext = m_curr;
     d->queuePrev = m_curr->queuePrev;
     
-    m_curr->queuePrev->queueNext = d;
+    if (m_curr->queuePrev) {
+        m_curr->queuePrev->queueNext = d;
+    }
     m_curr->queuePrev = d;
 
     m_curr = d;

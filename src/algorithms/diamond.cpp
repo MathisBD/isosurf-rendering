@@ -56,7 +56,8 @@ Diamond::Diamond(const vertex_t& center_, uint8_t maxLevel_)
     isSplit = false;
     queueNext = queuePrev = nullptr;
     queueID = DiamondQueue::NO_QUEUE_ID;
-
+    forceSplit = 0;
+    
     // Compute the diamond info.
     scale = min3(TrailingZeros(center.x), TrailingZeros(center.y), TrailingZeros(center.z));
     level = maxLevel - scale;

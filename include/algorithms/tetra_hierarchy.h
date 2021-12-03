@@ -53,9 +53,6 @@ private:
     Parameters m_params;
     glm::vec3 m_viewOrigin;
     const Plane* m_frustrumPlanes;
-    // This is set to false the first time 
-    // SplitMerge() is called.
-    bool m_firstSplitMerge = true;
 
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
@@ -66,6 +63,9 @@ private:
     // The merge queue holds all diamonds that are split
     // but have no split child.
     DiamondQueue m_mergeQueue;
+    // This is incremented every time we start a new 
+    // split/merge phase, i.e. when the camera position or rotation is updated.
+    uint32_t m_checkID = 0;
 
     Diamond* CreateRootDiamond();
     // Returns a nullptr if the diamond wasn't found.
