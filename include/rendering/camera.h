@@ -13,11 +13,9 @@ public:
         float fovDeg, float aspectRatio);
     ~Camera();
 
-    void Update(const InputManager* input);
-    // Translate in the local camera axis : 
-    // x is left
-    // y is up
-    // z is forward
+    // Returns true if the camera's state (position/rotation)
+    // has changed.
+    bool Update(const InputManager* input);
     
     const glm::vec3 WorldPosition() const;
     const glm::mat4& WorldToViewMatrix() const;
@@ -37,7 +35,7 @@ private:
     float m_moveSpeed;
     float m_rotateSpeed;
     // Field of view in degrees.
-    float m_fov; 
+    float m_fovDeg; 
     // screen width / screen height
     float m_aspectRatio;
 
@@ -45,11 +43,15 @@ private:
     glm::vec2 m_prevCursorPos;
 
     glm::vec3 Left();
-    
+
+    // Translate in the local camera axis : 
+    // x is left
+    // y is up
+    // z is forward
     void Move(const glm::vec3& direction);
     void RotateHorizontal(float x);
     void RotateVertical(float y);
 
-    void UpdateMatrix(float FOVdev, float aspectRatio, float clipNear, float clipFar);
+    void UpdateMatrix();
     void UpdateFrustrumPlanes();
 };

@@ -6,6 +6,7 @@
 #include "glm/gtx/hash.hpp"
 #include "rendering/mesh.h"
 #include "algorithms/diamond_queue.h"
+#include "rendering/plane.h"
 
 
 // TODO : use a memory pool for the tetras.
@@ -25,6 +26,7 @@ public:
         // Values around 0.5 are reasonable. The higher the value, the more we split
         // diamonds close to the view origin and the less we split further away.
         float splitFactor;
+        float maxDistance;
     };
 
     TetraHierarchy( 
@@ -33,24 +35,28 @@ public:
         const Parameters& params);    
     ~TetraHierarchy();
     
-    void SplitMerge(const glm::vec3& viewOrigin, uint32_t maxTimeMilliseconds);
+    void SplitMerge(
+        const glm::vec3& viewOrigin, 
+        const Plane* frustrumPlanes,
+        bool recalculate,
+        uint32_t maxTimeMilliseconds);
     
     inline const Diamond* GetFirstLeafDiamond() const { return m_splitQueue.GetFirst(); }
-    inline const Diamond* GetFirstMQDiamond() const { return m_mergeQueue.GetFirst(); }
     inline uint32_t GetMaxLevel() const { return m_params.maxLevel; }
     inline uint32_t GetMaxDepth() const { return 3*m_params.maxLevel + 2; }
-    
     // The valid coordinates range from 0 to MaxCoord(maxLevel) incuded.
-    inline static uint32_t MaxCoord(uint32_t maxLevel) {
-        return (1U << (maxLevel+1));
-    }
+    inline static uint32_t MaxCoord(uint32_t maxLevel) { return (1U << (maxLevel+1)); }
 private:
     // The valid depths range from 0 to 3*maxLevel+2 included.
     CubeGrid m_grid;
     float (*m_density)(glm::vec3 pos);
     Parameters m_params;
     glm::vec3 m_viewOrigin;
-   
+    const Plane* m_frustrumPlanes;
+    // This is set to false the first time 
+    // SplitMerge() is called.
+    bool m_firstSplitMerge = true;
+
     // Diamonds indexed by their center vertex.
     // We only store diamonds that have an active tetra.
     std::unordered_map<vertex_t, Diamond*> m_diamonds;
@@ -92,6 +98,8 @@ private:
         uint8_t* le2, 
         uint8_t* i1, 
         uint8_t* i2);
+
+    bool IsInViewFrustrum(const Diamond* d);
 
     //void AddOutline(const Tetra* t);
 };

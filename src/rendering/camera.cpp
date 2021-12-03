@@ -4,6 +4,7 @@
 #include <glm/gtx/vector_angle.hpp>
 #include "timer.h"
 #include <assert.h>
+#include <stdio.h>
 
 
 Camera::Camera(const glm::vec3& position, float moveSpeed, float rotateSpeed,
@@ -13,9 +14,11 @@ Camera::Camera(const glm::vec3& position, float moveSpeed, float rotateSpeed,
     m_up(0.0f, 1.0f, 0.0f),
     m_moveSpeed(moveSpeed),
     m_rotateSpeed(rotateSpeed),
-    m_fov(fovDeg),
+    m_fovDeg(fovDeg),
     m_aspectRatio(aspectRatio)
 {
+    UpdateMatrix();
+    UpdateFrustrumPlanes();
 }
 
 Camera::~Camera() 
@@ -51,27 +54,33 @@ void Camera::RotateVertical(float y)
     }  
 }
 
-void Camera::Update(const InputManager* input) 
+bool Camera::Update(const InputManager* input) 
 {
-
+    bool changed = false;
     // translate camera
     if (input->m_leftKey == KeyState::PRESSED) {
         Move({1.0, 0.0, 0.0});
+        changed = true;
     }
     if (input->m_rightKey == KeyState::PRESSED) {
         Move({-1.0, 0.0, 0.0});
+        changed = true;
     }
     if (input->m_downKey == KeyState::PRESSED) {
         Move({0.0, 0.0, -1.0});
+        changed = true;
     }
     if (input->m_upKey == KeyState::PRESSED) {
         Move({0.0, 0.0, 1.0});
+        changed = true;
     }
     if (input->m_rShiftKey == KeyState::PRESSED) {
         Move({0.0, 1.0, 0.0});
+        changed = true;
     }
     if (input->m_rCtrlKey == KeyState::PRESSED) {
         Move({0.0, -1.0, 0.0});
+        changed = true;
     }
 
     // rotate camera
@@ -93,25 +102,24 @@ void Camera::Update(const InputManager* input)
         RotateHorizontal(-(cursorPos.x - m_prevCursorPos.x));
         RotateVertical(-(cursorPos.y - m_prevCursorPos.y));
         m_prevCursorPos = cursorPos;
+        changed = true;
     }
 
-    UpdateMatrix(
-        m_fov, 
-        m_aspectRatio,
-        0.1f,
-        1000.0f); 
+    if (changed) {
+        UpdateMatrix(); 
+        UpdateFrustrumPlanes();
+    }
+    return changed;
 }
 
-void Camera::UpdateMatrix(float FOVdeg, float aspectRatio, float clipNear, float clipFar) 
+void Camera::UpdateMatrix() 
 {
     assert(FOVdeg > 0.0f);
     assert(aspectRatio > 0.0f);
     assert(clipNear > 0.0f);
 
     m_worldToView = glm::lookAt(m_position, m_position + m_forward, m_up);  
-    m_viewToScreen = glm::perspective(glm::radians(FOVdeg), aspectRatio, clipNear, clipFar);
-
-    UpdateFrustrumPlanes();
+    m_viewToScreen = glm::perspective(glm::radians(m_fovDeg), m_aspectRatio, 1.0f, 1000.0f);
 }
 
 const glm::vec3 Camera::WorldPosition() const 
@@ -142,10 +150,10 @@ void Camera::UpdateFrustrumPlanes()
     // See http://web.archive.org/web/20120531231005/http://crazyjoke.free.fr/doc/3D/plane%20extraction.pdf
     // for an explanation (nothing really fancy).
     glm::mat4 m = glm::transpose(m_viewToScreen * m_worldToView);
-    m_frustrumPlanes[0] = Plane(- (m[4] + m[1])); // left
-    m_frustrumPlanes[1] = Plane(- (m[4] - m[1])); // right
-    m_frustrumPlanes[2] = Plane(- (m[4] + m[2])); // bottom
-    m_frustrumPlanes[3] = Plane(- (m[4] - m[2])); // top
-    m_frustrumPlanes[4] = Plane(- (m[4] + m[3])); // near
-    m_frustrumPlanes[5] = Plane(- (m[4] - m[3])); // far
+    m_frustrumPlanes[0] = Plane(- (m[3] + m[0])); // left
+    m_frustrumPlanes[1] = Plane(- (m[3] - m[0])); // right
+    m_frustrumPlanes[2] = Plane(- (m[3] + m[1])); // bottom
+    m_frustrumPlanes[3] = Plane(- (m[3] - m[1])); // top
+    m_frustrumPlanes[4] = Plane(- (m[3] + m[2])); // near
+    m_frustrumPlanes[5] = Plane(- (m[3] - m[2])); // far
 }

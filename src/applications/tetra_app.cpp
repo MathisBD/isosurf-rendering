@@ -19,7 +19,7 @@ static float Sphere(glm::vec3 pos)
 static float Noise(glm::vec3 pos)
 {
     //float step = 1.0f - glm::smoothstep(80.0f, 100.0f, glm::length(pos));
-    float x = TetraApp::s_noise.eval(pos.x/100, pos.y/100, pos.z/100);
+    float x = TetraApp::s_noise.eval(pos.x/150, pos.y/150, pos.z/150);
     x += 0.1f * TetraApp::s_noise.eval(pos.x/20, pos.y/20, pos.z/20);
     //return ((x + 1.0f) * step) - 1.0f;
     return x;
@@ -40,14 +40,15 @@ TetraApp::TetraApp() :
 
     // Create the tetra hierarchy.
     TetraHierarchy::Parameters params;
-    params.maxLevel = 5;
+    params.maxLevel = 6;
     params.mcChunkDim = 8;
     params.splitFactor = 0.4f;
+    params.maxDistance = 500.0f;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(params.maxLevel);
     CubeGrid grid = CubeGrid(
         maxCoord+1,
-        {-100.0f, -100.0f, -100.0f},
-        200.0f);
+        {-1000.0f, -1000.0f, -1000.0f},
+        2000.0f);
     m_hierarchy = new TetraHierarchy(grid, Noise, params);
 
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
@@ -63,8 +64,13 @@ TetraApp::~TetraApp()
 
 void TetraApp::Update()
 {
-    m_camera->Update(m_inputMgr);
-    m_hierarchy->SplitMerge(m_camera->WorldPosition(), 15);
+    bool cameraChanged = m_camera->Update(m_inputMgr);
+    
+    m_hierarchy->SplitMerge(
+        m_camera->WorldPosition(),
+        m_camera->FrustrumPlanes(),
+        cameraChanged,
+        15);
 }
 
 void TetraApp::DrawImGui() 
@@ -82,6 +88,12 @@ void TetraApp::DrawImGui()
 
         ImGui::ColorEdit3("Mesh shallow color", (float*)&m_shallowMeshColor);
         ImGui::ColorEdit3("Mesh deep color", (float*)&m_deepMeshColor);
+
+        ImGui::Text("Frustrum plane normals :");
+        for (uint8_t i = 0; i < 6; i++) {
+            const glm::vec3& n = m_camera->FrustrumPlanes()[i].GetNormal();
+            ImGui::Text("%.2f %.2f %.2f", n.x, n.y, n.z);
+        }
 
         ImGui::End();
     }

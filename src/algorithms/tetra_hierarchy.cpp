@@ -6,44 +6,54 @@
 #include <chrono>
 
 
-uint64_t MillisecondsSince(const std::chrono::high_resolution_clock::time_point& start) 
+int64_t MillisecondsSince(const std::chrono::high_resolution_clock::time_point& start) 
 {
     auto curr = std::chrono::high_resolution_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(curr - start);
     return ms.count();    
 }
 
-void TetraHierarchy::SplitMerge(const glm::vec3& viewOrigin, uint32_t maxTimeMilliseconds) 
+void TetraHierarchy::SplitMerge(
+    const glm::vec3& viewOrigin, 
+    const Plane* frustrumPlanes,
+    bool recalculate,
+    uint32_t maxTimeMilliseconds) 
 {
-    // The view position changed : we have to check everything again.
-    if (glm::distance(viewOrigin, m_viewOrigin) > 0.00001f) {
+    if (recalculate || m_firstSplitMerge) {
         m_viewOrigin = viewOrigin;
+        m_frustrumPlanes = frustrumPlanes;
         m_splitQueue.SetCurrentToFirst();
         m_mergeQueue.SetCurrentToFirst();
+        m_firstSplitMerge = false;
     }
     // Merge
     auto start = std::chrono::high_resolution_clock::now();
     Diamond* d;
     while (d = m_mergeQueue.GetCurrent()) {
-        m_mergeQueue.AdvanceCurrent();
-        auto curr = std::chrono::high_resolution_clock::now();
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(curr - start);
-        int64_t time = ms.count();
-        if (time > (int64_t)maxTimeMilliseconds) {
+        int64_t time = MillisecondsSince(start);
+        if (time > maxTimeMilliseconds) {
+            printf("M %ld\n", time);
             return;
         }
         if (ShouldMerge(d) && d->isSplit) {
             Merge(d);
         }
+        else {
+            m_mergeQueue.AdvanceCurrent();
+        }
     } 
     // Split
     while (d = m_splitQueue.GetCurrent()) {
-        m_splitQueue.AdvanceCurrent();
-        if (MillisecondsSince(start) > maxTimeMilliseconds) {
+        int64_t time = MillisecondsSince(start);
+        if (time > maxTimeMilliseconds) {
+            printf("S %ld\n", time);
             return;
         }
         if (ShouldSplit(d) && !d->isSplit) {
             Split(d);
+        }
+        else {
+            m_splitQueue.AdvanceCurrent();
         }
     }  
 }
@@ -73,35 +83,31 @@ TetraHierarchy::~TetraHierarchy()
 
 float TetraHierarchy::GoalLevel(const Diamond* d) 
 {
-    // Calculate the diamond's bounding sphere radius.
-    float radius = m_grid.cellSize * (1U << (d->scale+1));
-    switch (d->phase) {
-    case 0: radius *= glm::sqrt(3); break;
-    case 1: radius *= glm::sqrt(2); break;
-    case 2: break;
-    default: assert(false);
-    }
     // Calculate the distance from the diamond's bounding sphere
     // to the view origin.
     float distance = glm::distance(m_viewOrigin, m_grid.WorldPosition(d->center));
+    float radius = d->Radius(m_grid.cellSize);
     distance = glm::max(distance - radius, 0.1f);
-
-    float maxDistance = glm::sqrt(3) * m_grid.worldSize;
+    // This maximum distance is quite arbitrary : 
+    // the camera can very well be outside of the grid.
+    //float maxDistance = glm::sqrt(3) * m_grid.worldSize;
     
     assert(0.0f < m_params.splitFactor && m_params.splitFactor < 1.0f);
-    float goalLevel = glm::log(distance / maxDistance) / glm::log(m_params.splitFactor);
+    float goalLevel = glm::log(distance / m_params.maxDistance) / glm::log(m_params.splitFactor);
     return glm::max(goalLevel, 0.0f);
 }
 
 bool TetraHierarchy::ShouldSplit(const Diamond* d) 
 {
     return d->Depth() < GetMaxDepth() &&
+        IsInViewFrustrum(d) &&
         (float)(d->level) < GoalLevel(d);
 }
 
 bool TetraHierarchy::ShouldMerge(const Diamond* d) 
 {
-    return (float)(d->level) >= (GoalLevel(d) + 1.0f);    
+    return !IsInViewFrustrum(d) || 
+        (float)(d->level) >= (GoalLevel(d) + 1.0f);    
 }
 
 Diamond* TetraHierarchy::CreateRootDiamond()
@@ -449,3 +455,10 @@ void TetraHierarchy::FindLongestEdge(
     m_outline->AddTriangle(i0, i2, i3);
     m_outline->AddTriangle(i1, i2, i3);
 }*/
+
+bool TetraHierarchy::IsInViewFrustrum(const Diamond* d) 
+{
+    float radius = d->Radius(m_grid.cellSize);
+    glm::vec3 center = m_grid.WorldPosition(d->center);
+    return Plane::SphereIntersectsFrustrum(m_frustrumPlanes, center, radius);
+}

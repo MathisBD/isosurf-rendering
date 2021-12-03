@@ -20,6 +20,9 @@ public:
     void Remove(Diamond* d);
     void AddFirst(Diamond* d);
     void AddLast(Diamond* d);
+    // d is added right before curr,
+    // then curr is set to d.
+    void AddBeforeCurrent(Diamond* d);
 
     void AdvanceCurrent();
     Diamond* GetCurrent();

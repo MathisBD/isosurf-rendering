@@ -82,6 +82,23 @@ void DiamondQueue::AddLast(Diamond* d)
            (!m_first && !m_last));
 }
 
+void DiamondQueue::AddBeforeCurrent(Diamond* d) 
+{
+    assert(d->queueID == NO_QUEUE_ID);
+    assert(m_curr && m_first && m_last);
+    if (m_first == m_curr) {
+        m_first = d;
+    }
+    d->queueNext = m_curr;
+    d->queuePrev = m_curr->queuePrev;
+    
+    m_curr->queuePrev->queueNext = d;
+    m_curr->queuePrev = d;
+
+    m_curr = d;
+    d->queueID = m_id;
+}
+
 void DiamondQueue::Remove(Diamond* d) 
 {
     assert(d->queueID == m_id);

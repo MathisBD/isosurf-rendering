@@ -37,6 +37,18 @@ void Diamond::Print() const
     printf("\ntetraCount=%lu/%u\n", activeTetras.size(), maxTetraCount);
 }
 
+float Diamond::Radius(float cellSize) const 
+{
+    float r = cellSize * (1U << (scale+1));
+    switch (phase) {
+    case 0: r *= glm::sqrt(3); break;
+    case 1: r *= glm::sqrt(2); break;
+    case 2: break;
+    default: assert(false);
+    }
+    return r;        
+}
+
 Diamond::Diamond(const vertex_t& center_, uint8_t maxLevel_) 
 {
     center = center_;

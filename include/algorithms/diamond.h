@@ -41,7 +41,9 @@ public:
     inline uint32_t Depth() const { return 3*((uint32_t)level) + 2; }
     void Print() const;
     bool IsComplete() const;
-
+    // The radius of this diamond's bounding sphere,
+    // i.e. half the length of its split edge.
+    float Radius(float cellSize) const;
 private:
     void InitChildren();
     void InitParents();
