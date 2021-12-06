@@ -1,57 +1,13 @@
 
 
+std::thread workers[8];
+
+worker():
+    
 
 
-Hierarchy:
-    mutex m;
-    condition_variable on_camera_change;
-
-
-    Work():
-        while (true) {
-            lock_guard lk(m);
-            if (merge_queue.GetCurrent()) {
-                Merge();
-            }
-            else if (split_queue.GetCurrent()) {
-                Split();
-            }
-            else {
-                on_camera_change.wait(lk);
-            }
-        }
-
-    UpdateCamera():
-        lock_guard lk(m);
-        m_viewOrigin = ...;
-        m_frustrumPlanes = ...;
-        m_checkID++;
-        m_splitQueue.SetCurrToFirst();
-        m_mergeQueue.SetCurrToFirst();
-
-        lk.unlock();
-        on_camera_change.notify();
-
-    GetCurrentMesh():
-        lock_guard lk(m);
-        mesh = ...; // copy all the leaf tetra meshes
-        return mesh;
-
-    Split(lock_guard lk):
-        for each parent:
-            if (...):
-                lk.unlock();
-                lk.lock();
-                Split(parent); 
-        ...
-        ...
-
-main:
-    Update():
-        if (cameraChanged)
-            hierarchy.UpdateCamera(...);
-
-
-    Render():
-        Mesh* m = hierarchy.GetCurrentMesh();
-        render(m);
+SplitDiamond():
+    ...
+    for each tetra t :
+        SplitTetra(t, workers[i], workers[i+1]);
+    ...
