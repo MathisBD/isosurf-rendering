@@ -6,7 +6,7 @@
 #include <chrono>
 #include <thread>
 #include "rendering/renderer.h"
-#include <unistd.h>
+
 
 
 #pragma region public
@@ -91,7 +91,8 @@ TetraHierarchy::TetraHierarchy(
     m_density(density),
     m_params(params),
     m_splitQueue(1),
-    m_mergeQueue(2)
+    m_mergeQueue(2),
+    m_threadPool(std::thread::hardware_concurrency())
 {
     uint32_t maxCoord = MaxCoord(m_params.maxLevel);
     assert(m_grid.dim == maxCoord + 1);
@@ -289,9 +290,15 @@ void TetraHierarchy::Split(Diamond* d)
             m_mergeQueue.Remove(pd);
         }
     }
+    // asynchronously split the tetras.
+    std::vector<std::future<void>> futures;
     for (Tetra* t : d->activeTetras) {
-        SplitTetra(t);
+        SplitTetra(t, futures);
     }
+    for (auto& f : futures) {
+        f.get();
+    }
+
     d->isSplit = true;
 }
 
@@ -343,8 +350,7 @@ void TetraHierarchy::Merge(Diamond* d)
 }
 
 
-
-void TetraHierarchy::SplitTetra(Tetra* t) 
+void TetraHierarchy::SplitTetra(Tetra* t, std::vector<std::future<void>>& futures) 
 {
     uint8_t le1, le2, i1, i2;
     FindLongestEdge(t, &le1, &le2, &i1, &i2);
@@ -357,7 +363,8 @@ void TetraHierarchy::SplitTetra(Tetra* t)
     t0->vertices[3] = v[le1];
     AddToDiamond(t0);
     //AddOutline(t0);
-    ComputeMesh(t0);
+    auto f0 = m_threadPool.Enqueue([=] { ComputeMesh(t0); });
+    futures.push_back(std::move(f0));
 
     Tetra* t1 = new Tetra(t, 1);
     t1->vertices[0] = v[i1];
@@ -366,7 +373,8 @@ void TetraHierarchy::SplitTetra(Tetra* t)
     t1->vertices[3] = v[le2];
     AddToDiamond(t1);
     //AddOutline(t1);
-    ComputeMesh(t1);
+    auto f1 = m_threadPool.Enqueue([=] { ComputeMesh(t1); });
+    futures.push_back(std::move(f1));
 }
 
 void TetraHierarchy::MergeTetra(Tetra* t) 

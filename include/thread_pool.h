@@ -14,8 +14,21 @@ public:
     ThreadPool(size_t threadCount);
     ~ThreadPool();
 
-    template <typename T>
-    std::future<T> Enqueue(std::function<T()> task);
+    template <typename F>
+    auto Enqueue(F task) -> std::future<decltype(task())>
+    {
+        using wrapper_type = std::packaged_task<decltype(task())()>;
+        auto wrapper = std::make_shared<wrapper_type>(std::move(task));
+        {
+            std::lock_guard lock(m_mutex);
+            m_taskQueue.emplace([=] {
+                (*wrapper)();
+            });
+        }
+        m_onEvent.notify_one();
+        return wrapper->get_future();
+    }
+
 private:
     std::mutex m_mutex;
     std::condition_variable m_onEvent;

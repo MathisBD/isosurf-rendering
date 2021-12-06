@@ -10,6 +10,8 @@
 #include <mutex>
 #include <condition_variable>
 #include "rendering/renderer.h"
+#include "thread_pool.h"
+#include <algorithm>
 
 
 // TODO : use a memory pool for the tetras.
@@ -53,7 +55,8 @@ private:
     // synchronization variables
     std::mutex m_mutex;
     std::condition_variable m_onCameraChanged;
-    
+    ThreadPool m_threadPool;
+
     // The valid depths range from 0 to 3*maxLevel+2 included.
     CubeGrid m_grid;
     float (*m_density)(glm::vec3 pos);
@@ -96,7 +99,7 @@ private:
     // Remove t from the leaf list and add both its children.
     // Add the children to their respective diamond (to find it,
     // compute the middle of the child's longest edge).
-    void SplitTetra(Tetra* t);
+    void SplitTetra(Tetra* t, std::vector<std::future<void>>& futures);
     void MergeTetra(Tetra* t);
     void AddToDiamond(Tetra* t);
     void RemoveFromDiamond(Tetra* t);

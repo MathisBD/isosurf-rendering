@@ -41,8 +41,8 @@ TetraApp::TetraApp() :
 
     // Create the tetra hierarchy.
     TetraHierarchy::Parameters params;
-    params.maxLevel = 6;
-    params.mcChunkDim = 4;
+    params.maxLevel = 7;
+    params.mcChunkDim = 8;
     params.splitFactor = 0.4f;
     params.maxDistance = 500.0f;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(params.maxLevel);

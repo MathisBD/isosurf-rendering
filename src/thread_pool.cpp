@@ -6,7 +6,7 @@
 ThreadPool::ThreadPool(size_t threadCount) : m_stop(false) 
 {
     for (size_t i = 0; i < threadCount; i++) {
-        m_threads.emplace_back(Worker, this);
+        m_threads.emplace_back(&ThreadPool::Worker, this);
     }
 }
 
@@ -17,7 +17,6 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::Worker() 
 {
-    printf("Worker !\n");
     while (true) {
         std::function<void()> task;
         {
@@ -33,22 +32,6 @@ void ThreadPool::Worker()
         }
         task();
     }    
-}
-
-template <typename T>
-std::future<T> ThreadPool::Enqueue(std::function<T()> task) 
-{
-    auto wrapper = std::make_shared<std::packaged_task<T()>>(
-        std::move(task)
-    );
-    {
-        std::lock_guard lock(m_mutex);
-        m_taskQueue.emplace([=] {
-            (*wrapper)();
-        });
-    }
-    m_onEvent.notify_one();
-    return wrapper->get_future();
 }
 
 
