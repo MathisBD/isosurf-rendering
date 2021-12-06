@@ -32,3 +32,5 @@ target_link_libraries(test ${GLM_LIBRARIES})
 
 # DL (needed for IMGUI to work)
 target_link_libraries(test dl)
+# pthreads (for std::thread)
+target_link_libraries(test pthread)

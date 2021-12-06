@@ -29,7 +29,7 @@ Diamond* DiamondQueue::GetCurrent()
     return m_curr;    
 }
 
-const Diamond* DiamondQueue::GetFirst() const
+Diamond* DiamondQueue::GetFirst()
 {
     return m_first;    
 }

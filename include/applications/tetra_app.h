@@ -7,6 +7,7 @@
 #include "algorithms/tetra_hierarchy.h"
 #include "third_party/open_simplex_noise/noise.h"
 #include "utils/running_average.h"
+#include <thread>
 
 
 
@@ -22,7 +23,8 @@ protected:
     Shader* m_defaultShader = nullptr;
     Shader* m_wireframeShader = nullptr;
     TetraHierarchy* m_hierarchy = nullptr;
-    
+    std::thread* m_worker;
+
     // camera rotation
     bool m_rotateCamera = false;
     glm::vec2 m_prevCursorPos;

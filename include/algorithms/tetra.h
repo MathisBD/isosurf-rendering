@@ -25,6 +25,8 @@ public:
     Tetra* parent;
 
     Mesh* mesh;
+    // Did someone allocate the gpu buffers for this mesh ?
+    bool allocatedMesh = false;
 
     // Root tetrahedron.
     Tetra()

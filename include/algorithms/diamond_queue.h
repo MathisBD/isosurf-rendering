@@ -26,7 +26,7 @@ public:
 
     void AdvanceCurrent();
     Diamond* GetCurrent();
-    const Diamond* GetFirst() const;
+    Diamond* GetFirst();
     void SetCurrentToFirst();
 private:
     uint32_t m_id;

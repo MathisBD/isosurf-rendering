@@ -22,5 +22,5 @@ public:
     size_t GetSize() const;
 private:
     size_t m_size;
-    uint32_t m_rendererID;
+    uint32_t m_rendererID = 424242;
 };

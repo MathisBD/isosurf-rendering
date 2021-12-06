@@ -4,64 +4,83 @@
 #include "algorithms/marching_cubes.h"
 #include <stdio.h>
 #include <chrono>
+#include <thread>
+#include "rendering/renderer.h"
+#include <unistd.h>
 
 
-int64_t MillisecondsSince(const std::chrono::high_resolution_clock::time_point& start) 
+#pragma region public
+
+uint32_t TetraHierarchy::GetMaxLevel() const 
 {
-    auto curr = std::chrono::high_resolution_clock::now();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(curr - start);
-    return ms.count();    
+    return m_params.maxLevel;    
 }
 
-void TetraHierarchy::SplitMerge(
-    const glm::vec3& viewOrigin, 
-    const Plane* frustrumPlanes,
-    bool recalculate,
-    uint32_t maxTimeMilliseconds) 
+uint32_t TetraHierarchy::GetMaxDepth() const 
 {
-    if (recalculate || m_checkID == 0) {
+    return 3 * m_params.maxLevel + 2;    
+}
+
+uint32_t TetraHierarchy::MaxCoord(uint32_t maxLevel) 
+{
+    return (1U << (maxLevel+1));    
+}
+
+void TetraHierarchy::Work() 
+{
+    while (true) {
+        // we want to release the lock after each iteration
+        // to give a chance to the render thread
+        // to draw the current mesh.
+        std::this_thread::yield();
+        std::unique_lock lock(m_mutex);
+        if (TryMerge()) {
+            printf("M");
+            continue;
+        }
+        else if (TrySplit()) {
+            printf("S");
+            continue;
+        }
+        else {
+            printf("W");
+            // Nothing to do : wait for the queue to change.
+            m_onCameraChanged.wait(lock);
+        }
+    }
+}
+
+void TetraHierarchy::UpdateCamera(
+    const glm::vec3& viewOrigin,
+    const Plane frustrumPlanes[6]) 
+{
+    {
+        std::lock_guard lock(m_mutex);
         m_viewOrigin = viewOrigin;
         m_frustrumPlanes = frustrumPlanes;
         m_splitQueue.SetCurrentToFirst();
         m_mergeQueue.SetCurrentToFirst();
         m_checkID++;
     }
-    // Merge
-    auto start = std::chrono::high_resolution_clock::now();
-    Diamond* d;
-    while (d = m_mergeQueue.GetCurrent()) {
-        assert(d->isSplit);
-        int64_t time = MillisecondsSince(start);
-        if (time > maxTimeMilliseconds) {
-            printf("%ld\n", time);
-            return;
+    m_onCameraChanged.notify_all();
+}
+
+void TetraHierarchy::DrawMesh(const Renderer* renderer, const Shader* shader) 
+{
+    std::lock_guard lock(m_mutex); 
+
+    Diamond* leaf = m_splitQueue.GetFirst();
+    while (leaf) {
+        for (Tetra* t : leaf->activeTetras) {
+            if (!t->allocatedMesh) {
+                t->mesh->AllocateGPUBuffers(GL_STATIC_DRAW, t->mesh->GetVertexCount(), t->mesh->GetTriangleCount() * 3);
+                t->mesh->UploadGPUBuffers();
+                t->allocatedMesh = true;
+            }
+            renderer->Draw(*(t->mesh), *shader);
         }
-        assert(d->forceSplit <= m_checkID);
-        if (ShouldMerge(d) || d->forceSplit == m_checkID) {
-            printf("M");
-            Merge(d);
-        }
-        else {
-            m_mergeQueue.AdvanceCurrent();
-        }
-    } 
-    // Split
-    while (d = m_splitQueue.GetCurrent()) {
-        assert(!d->isSplit);
-        int64_t time = MillisecondsSince(start);
-        if (time > maxTimeMilliseconds) {
-            printf("%ld\n", time);
-            return;
-        }
-        assert(d->forceSplit <= m_checkID);
-        if (ShouldSplit(d) || d->forceSplit == m_checkID) {
-            printf("S");
-            Split(d);
-        }
-        else {
-            m_splitQueue.AdvanceCurrent();
-        }
-    }  
+        leaf = leaf->queueNext;
+    }
 }
 
 TetraHierarchy::TetraHierarchy(
@@ -85,6 +104,47 @@ TetraHierarchy::~TetraHierarchy()
 {
     // TODO : keep track of all the allocated 
     // tetras and diamonds, and free them all here.    
+}
+
+#pragma endregion
+
+#pragma region private
+
+
+bool TetraHierarchy::TryMerge()
+{
+    Diamond* d;
+    while (d = m_mergeQueue.GetCurrent()) {
+        assert(d->isSplit);
+        assert(d->forceSplit <= m_checkID);
+        assert(!(ShouldMerge(d) && ShouldSplit(d)));
+        if (ShouldMerge(d) || d->forceSplit == m_checkID) {
+            Merge(d);
+            return true;
+        }
+        else {
+            m_mergeQueue.AdvanceCurrent();
+        }
+    }
+    return false;
+}
+
+bool TetraHierarchy::TrySplit()
+{
+    Diamond* d;
+    while (d = m_splitQueue.GetCurrent()) {
+        assert(!d->isSplit);
+        assert(d->forceSplit <= m_checkID);
+        assert(!(ShouldMerge(d) && ShouldSplit(d)));
+        if (ShouldSplit(d) || d->forceSplit == m_checkID) {
+            Split(d);
+            return true;
+        }
+        else {
+            m_splitQueue.AdvanceCurrent();
+        }
+    }  
+    return false;
 }
 
 float TetraHierarchy::GoalLevel(const Diamond* d) 
@@ -398,8 +458,7 @@ void TetraHierarchy::ComputeMesh(Tetra* t)
         MCChunk mc = MCChunk(grid, m_density, t->mesh, color);
         mc.Compute();
     }
-    t->mesh->AllocateGPUBuffers(GL_STATIC_DRAW, t->mesh->GetVertexCount(), t->mesh->GetTriangleCount() * 3);
-    t->mesh->UploadGPUBuffers();
+    t->allocatedMesh = false;    
 }
 
 
@@ -474,3 +533,5 @@ bool TetraHierarchy::IsInViewFrustrum(const Diamond* d)
     glm::vec3 center = m_grid.WorldPosition(d->center);
     return Plane::SphereIntersectsFrustrum(m_frustrumPlanes, center, radius);
 }
+
+#pragma endregion

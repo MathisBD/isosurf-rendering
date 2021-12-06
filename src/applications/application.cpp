@@ -6,6 +6,8 @@
 #include "third_party/imgui/imgui.h"
 #include "third_party/imgui/imgui_impl_glfw.h"
 #include "third_party/imgui/imgui_impl_opengl3.h"
+#include <chrono>
+#include <thread>
 
 
 Application::Application()
@@ -79,12 +81,19 @@ void Application::MainLoop()
     // GLFW event loop
     while(!glfwWindowShouldClose(m_window))
     {   
+        using clock = std::chrono::high_resolution_clock;
+        auto start = clock::now();
         Timer::UpdateTime();
         Update();
         
         m_renderer->Clear();
         Render();
         glfwSwapBuffers(m_window);
+
+        auto end = clock::now();
+        auto goalFrameTime = std::chrono::microseconds((uint64_t)(1000000.0f / 60.0f));
+        auto sleepTime = goalFrameTime - (end - start);
+        std::this_thread::sleep_for(sleepTime);
         
         glfwPollEvents();
     }   

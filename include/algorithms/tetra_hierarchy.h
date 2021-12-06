@@ -7,6 +7,9 @@
 #include "rendering/mesh.h"
 #include "algorithms/diamond_queue.h"
 #include "rendering/plane.h"
+#include <mutex>
+#include <condition_variable>
+#include "rendering/renderer.h"
 
 
 // TODO : use a memory pool for the tetras.
@@ -35,18 +38,22 @@ public:
         const Parameters& params);    
     ~TetraHierarchy();
     
-    void SplitMerge(
-        const glm::vec3& viewOrigin, 
-        const Plane* frustrumPlanes,
-        bool recalculate,
-        uint32_t maxTimeMilliseconds);
-    
-    inline const Diamond* GetFirstLeafDiamond() const { return m_splitQueue.GetFirst(); }
-    inline uint32_t GetMaxLevel() const { return m_params.maxLevel; }
-    inline uint32_t GetMaxDepth() const { return 3*m_params.maxLevel + 2; }
+    // Do the split/merge process.
+    void Work();
+    void UpdateCamera(
+        const glm::vec3& viewOrigin,
+        const Plane frustrumPlanes[6]);
+    void DrawMesh(const Renderer* renderer, const Shader* shader);
+
+    uint32_t GetMaxLevel() const;
+    uint32_t GetMaxDepth() const;
     // The valid coordinates range from 0 to MaxCoord(maxLevel) incuded.
-    inline static uint32_t MaxCoord(uint32_t maxLevel) { return (1U << (maxLevel+1)); }
+    static uint32_t MaxCoord(uint32_t maxLevel);
 private:
+    // synchronization variables
+    std::mutex m_mutex;
+    std::condition_variable m_onCameraChanged;
+    
     // The valid depths range from 0 to 3*maxLevel+2 included.
     CubeGrid m_grid;
     float (*m_density)(glm::vec3 pos);
@@ -72,6 +79,12 @@ private:
     Diamond* FindDiamond(const vertex_t& center);
     Diamond* FindOrCreateDiamond(const vertex_t& center);
 
+    // Try to perform a single split.
+    // Returns true if successful.
+    bool TrySplit();
+    // Try to perform a single merge.
+    // Returns true if successful.
+    bool TryMerge();
     void Split(Diamond* d);
     void Merge(Diamond* d);
     

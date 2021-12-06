@@ -9,6 +9,7 @@
 #include "algorithms/tetra_hierarchy.h"
 #include <chrono>
 #include <stdio.h>
+#include <thread>
 
 
 static float Sphere(glm::vec3 pos)
@@ -41,7 +42,7 @@ TetraApp::TetraApp() :
     // Create the tetra hierarchy.
     TetraHierarchy::Parameters params;
     params.maxLevel = 6;
-    params.mcChunkDim = 8;
+    params.mcChunkDim = 4;
     params.splitFactor = 0.4f;
     params.maxDistance = 500.0f;
     uint32_t maxCoord = TetraHierarchy::MaxCoord(params.maxLevel);
@@ -49,8 +50,16 @@ TetraApp::TetraApp() :
         maxCoord+1,
         {-1000.0f, -1000.0f, -1000.0f},
         2000.0f);
+    
     m_hierarchy = new TetraHierarchy(grid, Noise, params);
-
+    // make sure we set the camera info before beggining
+    // the split/merge thread.
+    m_hierarchy->UpdateCamera(m_camera->WorldPosition(), m_camera->FrustrumPlanes());
+    // do the split/merge in a background thread.
+    m_worker = new std::thread([&]() {
+        m_hierarchy->Work();
+    });
+    
     m_renderer->SetBackgroundColor({0.1, 0.1, 0.1, 1});
 }
 
@@ -59,18 +68,17 @@ TetraApp::~TetraApp()
     delete m_camera;
     delete m_defaultShader;
     delete m_wireframeShader;
-    delete m_hierarchy;
+    delete m_worker;
+    delete m_hierarchy;    
 }
 
 void TetraApp::Update()
 {
     bool cameraChanged = m_camera->Update(m_inputMgr);
-    
-    m_hierarchy->SplitMerge(
-        m_camera->WorldPosition(),
-        m_camera->FrustrumPlanes(),
-        cameraChanged,
-        15);
+    if (cameraChanged) {
+        printf("\nUpdate camera\n");
+        m_hierarchy->UpdateCamera(m_camera->WorldPosition(), m_camera->FrustrumPlanes());
+    }
 }
 
 void TetraApp::DrawImGui() 
@@ -122,27 +130,18 @@ void TetraApp::DrawMesh()
     m_defaultShader->SetUniform3f("u_lightDirection", -1, 0, -1);
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
     
-    const Diamond* leaf = m_hierarchy->GetFirstLeafDiamond();
-    uint32_t drawCalls = 0;
-    uint32_t triangles = 0;
-    uint32_t vertices = 0;
-    while (leaf) {
-        // Blend between the shallow and deep colors.
-        /*float alpha = leaf->Depth() / (float)m_hierarchy->GetMaxDepth();
-        assert(0 <= alpha && alpha <= 1);
-        const glm::vec3& c = m_shallowMeshColor * (1 - alpha) + m_deepMeshColor * alpha;
-        m_defaultShader->SetUniform3f("u_color", c.x, c.y, c.z);*/
-        for (const Tetra* t : leaf->activeTetras) {
-            m_renderer->Draw(*(t->mesh), *m_defaultShader);
-            drawCalls++;
-            vertices += t->mesh->GetVertexCount();
-            triangles += t->mesh->GetTriangleCount();
-        }
-        leaf = leaf->queueNext;
-    }
-    m_drawCalls.AddSample(drawCalls);
-    m_triangles.AddSample(triangles);
-    m_vertices.AddSample(vertices);
+    m_hierarchy->DrawMesh(m_renderer, m_defaultShader);
+
+    /*Mesh* mesh = m_hierarchy->GetCurrentMesh();
+    mesh->AllocateGPUBuffers(GL_STATIC_DRAW, mesh->GetVertexCount(), mesh->GetTriangleCount() * 3);
+    mesh->UploadGPUBuffers();
+    printf("\nGet Current Mesh\n");
+    m_renderer->Draw(*mesh, *m_defaultShader);*/
+           
+    //m_drawCalls.AddSample(1);
+    //m_triangles.AddSample(mesh->GetTriangleCount());
+    //m_vertices.AddSample(mesh->GetVertexCount());
+    //delete mesh;
 }
 
 void TetraApp::Render()
