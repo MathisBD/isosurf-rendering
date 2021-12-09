@@ -2,15 +2,23 @@
 
 # Building 
 
-Required libraries : openGL (mesa), glfw, glew, glm.
+Required libraries : openGL, glfw, glew, glm.
 
-To build the project (out of source) : go to /build, then 
+To build the project (out of source) : go to ./build (create it if necessary), then :
 cmake -DCMAKE_BUILD_TYPE=mode .. && make && ./test
 CMake supports different build modes :
     - Debug : no optimizations
     - Release : optimizations but no debug symbols
     - RelWithDebInfo : optimizations + debug symbols (useful for profiling)
 
+# Running
+
+Use the arrow keys to move left/right and forward/backwards.
+To move up : right SHIFT.
+To move down : right CTRL.
+To look around use hold down the right button of the mouse.
+
+The color of a triangle indicates how small it is.
 # Sources:
 
 Gregorski, Benjamin, Mark Duchaineau, Peter Lindstrom, Valerio Pascucci, and Kenneth I. Joy. "Interactive view-dependent rendering of large isosurfaces." In Proceedings of the conference on Visualization'02, pp. 475-484. IEEE Computer Society, 2002.

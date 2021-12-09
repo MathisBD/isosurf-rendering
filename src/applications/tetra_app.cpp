@@ -76,7 +76,6 @@ void TetraApp::Update()
 {
     bool cameraChanged = m_camera->Update(m_inputMgr);
     if (cameraChanged) {
-        printf("\nUpdate camera\n");
         m_hierarchy->UpdateCamera(m_camera->WorldPosition(), m_camera->FrustrumPlanes());
     }
 }
@@ -94,14 +93,8 @@ void TetraApp::DrawImGui()
         ImGui::Text("Average vertex count : %.0f", m_vertices.GetAverage()); 
         ImGui::Text("Average triangle count : %.0f", m_triangles.GetAverage());
 
-        ImGui::ColorEdit3("Mesh shallow color", (float*)&m_shallowMeshColor);
-        ImGui::ColorEdit3("Mesh deep color", (float*)&m_deepMeshColor);
-
-        ImGui::Text("Frustrum plane normals :");
-        for (uint8_t i = 0; i < 6; i++) {
-            const glm::vec3& n = m_camera->FrustrumPlanes()[i].GetNormal();
-            ImGui::Text("%.2f %.2f %.2f", n.x, n.y, n.z);
-        }
+        //ImGui::ColorEdit3("Mesh shallow color", (float*)&m_shallowMeshColor);
+        //ImGui::ColorEdit3("Mesh deep color", (float*)&m_deepMeshColor);
 
         ImGui::End();
     }
@@ -130,18 +123,18 @@ void TetraApp::DrawMesh()
     m_defaultShader->SetUniform3f("u_lightDirection", -1, 0, -1);
     GLCall(glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ));
     
-    m_hierarchy->DrawMesh(m_renderer, m_defaultShader);
-
-    /*Mesh* mesh = m_hierarchy->GetCurrentMesh();
-    mesh->AllocateGPUBuffers(GL_STATIC_DRAW, mesh->GetVertexCount(), mesh->GetTriangleCount() * 3);
-    mesh->UploadGPUBuffers();
-    printf("\nGet Current Mesh\n");
-    m_renderer->Draw(*mesh, *m_defaultShader);*/
-           
-    //m_drawCalls.AddSample(1);
-    //m_triangles.AddSample(mesh->GetTriangleCount());
-    //m_vertices.AddSample(mesh->GetVertexCount());
-    //delete mesh;
+    uint32_t drawCalls = 0;
+    uint32_t triangles = 0;
+    uint32_t vertices = 0;
+    m_hierarchy->ForEveryMesh([&](const Mesh& mesh) {
+        m_renderer->Draw(mesh, *m_defaultShader);
+        drawCalls++;
+        triangles += mesh.GetTriangleCount();
+        vertices += mesh.GetVertexCount();
+    });
+    m_drawCalls.AddSample(drawCalls);
+    m_triangles.AddSample(triangles);
+    m_vertices.AddSample(vertices);
 }
 
 void TetraApp::Render()

@@ -35,15 +35,12 @@ void TetraHierarchy::Work()
         std::this_thread::yield();
         std::unique_lock lock(m_mutex);
         if (TryMerge()) {
-            printf("M");
             continue;
         }
         else if (TrySplit()) {
-            printf("S");
             continue;
         }
         else {
-            printf("W");
             // Nothing to do : wait for the queue to change.
             m_onCameraChanged.wait(lock);
         }
@@ -65,7 +62,7 @@ void TetraHierarchy::UpdateCamera(
     m_onCameraChanged.notify_all();
 }
 
-void TetraHierarchy::DrawMesh(const Renderer* renderer, const Shader* shader) 
+void TetraHierarchy::ForEveryMesh(const std::function<void(const Mesh&)>& f) 
 {
     std::lock_guard lock(m_mutex); 
 
@@ -77,7 +74,7 @@ void TetraHierarchy::DrawMesh(const Renderer* renderer, const Shader* shader)
                 t->mesh->UploadGPUBuffers();
                 t->allocatedMesh = true;
             }
-            renderer->Draw(*(t->mesh), *shader);
+            f(*(t->mesh));
         }
         leaf = leaf->queueNext;
     }

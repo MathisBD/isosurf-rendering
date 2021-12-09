@@ -45,8 +45,10 @@ public:
     void UpdateCamera(
         const glm::vec3& viewOrigin,
         const Plane frustrumPlanes[6]);
-    void DrawMesh(const Renderer* renderer, const Shader* shader);
-
+    
+    // Calls f on the mesh of all leaf tetras.
+    void ForEveryMesh(const std::function<void(const Mesh&)>& f);
+    
     uint32_t GetMaxLevel() const;
     uint32_t GetMaxDepth() const;
     // The valid coordinates range from 0 to MaxCoord(maxLevel) incuded.
